@@ -1,0 +1,382 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B2545"> <title>Compagnon IBC 2026</title> <style> :root{
+  --ink:#0B1E30; --slate:#5C7089; --faint:#93A6BC;
+  --paper:#EEF3F9; --surface:#FFFFFF; --line:#DCE6F0;
+  --brand:#0B2545; --brand2:#0F3D66; --signal:#0EA5E9; --signal-ink:#075985;
+  --amber:#C67C00; --amber-bg:#FFF3DD;
+  --pill-bg:#E7EFF8; --pill-ink:#3B5773;
+  --done:#B9C4D2;
+  --radius:16px; --radius-lg:22px;
+  font-size:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--paper); color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:48px;
+}
+h1,h2,h3{font-family:inherit}
+button{font-family:inherit}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* ---------- Header ---------- */
+header.hero{
+  position:sticky; top:0; z-index:20;
+  background:linear-gradient(160deg,var(--brand) 0%,var(--brand2) 65%,#0B6EA8 130%);
+  color:#fff; padding:18px 18px 14px;
+  box-shadow:0 10px 24px -8px rgba(6,20,40,.45); } .hero-top{display:flex; align-items:baseline; justify-content:space-between; gap:10px} .hero-top h1{margin:0; font-size:21px; font-weight:800; letter-spacing:-.01em} .hero-top .venue{margin:2px 0 0; font-size:12.5px; color:#B9DEF3; font-weight:500} .planlink{
+  flex:0 0 auto; display:flex; align-items:center; gap:6px;
+  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28);
+  color:#fff; font-size:12px; font-weight:700; text-decoration:none;
+  border-radius:10px; padding:8px 11px; white-space:nowrap; } .days{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:14px} .days button{
+  border:1px solid rgba(255,255,255,.22); border-radius:11px; padding:9px 4px;
+  background:rgba(255,255,255,.08); color:#EAF6FF; font-weight:700; font-size:13px;
+  transition:background .15s, color .15s; } .days button .n{display:block; font-weight:500; font-size:10.5px; color:#AEDBF2; margin-top:1px} .days button.on{background:#fff; color:var(--brand)} .days button.on .n{color:var(--signal-ink)}
+
+/* ---------- Countdown ---------- */
+.wrap{max-width:640px; margin:0 auto; padding:14px 14px 0} .countdown{
+  margin:14px 0; padding:16px 18px; border-radius:var(--radius-lg);
+  background:linear-gradient(135deg,#0B2545,#0B6EA8); color:#fff;
+  box-shadow:0 8px 22px -10px rgba(11,37,69,.55); } .countdown .eyebrow{display:flex; align-items:center; gap:6px; font-size:12px; color:#B9DEF3; font-weight:600} .countdown h2{margin:5px 0 2px; font-size:17px; line-height:1.3} .countdown .when{margin:0; color:#CFE9F8; font-size:13px} .countdown .clock{display:flex; gap:6px; margin-top:12px} .countdown .clock span{
+  flex:1; padding:7px 2px; border-radius:10px; background:rgba(255,255,255,.12);
+  text-align:center; font-size:10.5px; color:#CFE9F8; } .countdown .clock b{display:block; font-size:19px; color:#fff; font-variant-numeric:tabular-nums}
+.countdown.done{background:linear-gradient(135deg,#3E4C5E,#57687D)}
+
+/* ---------- Toolbar ---------- */
+.toolbar{position:sticky; top:126px; z-index:15; background:var(--paper); padding:2px 0 10px} .searchrow{display:flex; gap:8px} .searchrow input{
+  flex:1; border:1px solid var(--line); border-radius:12px; padding:11px 13px;
+  background:var(--surface); font-size:14.5px; color:var(--ink); } .searchrow input:focus{outline:2px solid var(--signal); outline-offset:1px} .ftbtn{
+  border:1px solid var(--line); border-radius:12px; padding:0 14px;
+  background:var(--surface); color:var(--signal-ink); font-weight:700; font-size:13px;
+  white-space:nowrap; display:flex; align-items:center; gap:6px; } .ftbtn .dot{width:7px; height:7px; border-radius:50%; background:var(--faint)} .ftbtn.on{background:var(--signal); color:#fff; border-color:var(--signal)} .ftbtn.on .dot{background:#fff}
+
+.chiprow{display:flex; gap:7px; overflow-x:auto; margin-top:9px; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none} .chiprow::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto; border:1px solid var(--line); background:var(--surface); color:var(--slate);
+  border-radius:999px; padding:6px 13px; font-size:12.5px; font-weight:600; white-space:nowrap; } .chip.on{background:var(--ink); color:#fff; border-color:var(--ink)}
+
+.stats{display:flex; gap:8px; margin:10px 0 4px; font-size:12.5px; color:var(--slate)} .stats b{color:var(--ink)} .stats .sep{color:var(--line)}
+
+/* ---------- Timeline ---------- */
+.daygroup{margin-top:22px}
+.daygroup h2{
+  margin:0 0 10px 2px; font-size:14px; font-weight:800; color:var(--brand);
+  display:flex; align-items:center; gap:8px; } .daygroup h2 .line{flex:1; height:1px; background:var(--line)} .daygroup h2 .dayhours{font-size:11px; font-weight:600; color:var(--faint)}
+
+.rail{position:relative; padding-left:62px} .rail::before{
+  content:""; position:absolute; left:21px; top:6px; bottom:6px; width:2px;
+  background:var(--line);
+}
+.item{position:relative; margin-bottom:10px} .item.hidden{display:none} .item .marker{
+  position:absolute; left:-62px; top:0; width:54px; text-align:right;
+  padding-right:8px; font-variant-numeric:tabular-nums;
+}
+.item .marker b{display:block; font-size:17px; color:var(--ink); font-weight:800} .item .marker small{display:block; font-size:13px; color:var(--slate); font-weight:700; margin-top:1px} .item .marker .mdate{display:block; font-size:9.5px; color:var(--faint); font-weight:700; text-transform:uppercase; letter-spacing:.02em; margin-bottom:2px} .item.past .marker .mdate{color:var(--faint)} .item.past .marker b, .item.past .marker small{color:var(--faint)}
+
+.card{
+  background:var(--surface); border-radius:var(--radius); padding:12px 13px;
+  border:1px solid var(--line); box-shadow:0 2px 10px -6px rgba(11,30,48,.15);
+  text-align:left; width:100%; display:block; } .item.ft .card{background:#EAF6FD; border-color:#B9E4F7; box-shadow:0 4px 14px -8px rgba(14,165,233,.4)} .item.train .card{background:var(--amber-bg); border-color:#F0D399} .item.social .card{
+  border-color:#F0C6E8;
+  background-color:#FDF3FA;
+  background-image:
+    radial-gradient(circle at 8% 20%, #FFFFFF 0 2px, transparent 2.2px),
+    radial-gradient(circle at 88% 18%, #FFD873 0 1.6px, transparent 1.8px),
+    radial-gradient(circle at 42% 82%, #FFFFFF 0 1.6px, transparent 1.8px),
+    radial-gradient(circle at 94% 68%, #F2A6E0 0 1.6px, transparent 1.8px),
+    radial-gradient(circle at 22% 58%, #FFD873 0 1.2px, transparent 1.4px),
+    radial-gradient(circle at 63% 28%, #FFFFFF 0 1.2px, transparent 1.4px),
+    radial-gradient(circle at 15% 90%, #F2A6E0 0 1.4px, transparent 1.6px),
+    radial-gradient(circle at 74% 48%, #FFFFFF 0 1.2px, transparent 1.4px),
+    linear-gradient(135deg,#FBEFFB 0%, #FFF6E4 100%); } .item.past .card{opacity:.55}
+
+.card-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px} .logo{
+  flex:0 0 auto; width:26px; height:26px; border-radius:7px; object-fit:contain;
+  background:#fff; border:1px solid var(--line); padding:3px; margin-right:2px; } .card-top-main{display:flex; align-items:flex-start; gap:8px; flex:1; min-width:0} .card h3{margin:0; font-size:14.5px; font-weight:700; line-height:1.35; color:var(--ink)} .ftbadge{
+  flex:0 0 auto; background:var(--signal); color:#fff; font-size:10px; font-weight:800;
+  border-radius:999px; padding:3px 8px; letter-spacing:.02em; } .loc{
+  margin:7px 0 0; font-size:12.5px; color:var(--signal-ink); font-weight:600;
+  display:flex; align-items:center; gap:5px; } .loc svg{flex:0 0 auto} .tags{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px} .tag{
+  background:var(--pill-bg); color:var(--pill-ink); font-size:10.5px; font-weight:700;
+  border-radius:6px; padding:3px 7px;
+}
+.note{margin:6px 0 0; font-size:12px; color:var(--slate)}
+
+.walk{
+  display:flex; align-items:center; gap:7px; margin:8px 0 0 -62px; padding-left:0;
+  font-size:11.5px; color:var(--slate);
+}
+.walk-line{flex:0 0 54px}
+.walk-badge{
+  display:inline-flex; align-items:center; gap:5px; background:#FFF3DD; color:#8A5A00;
+  border-radius:8px; padding:4px 9px; font-weight:700; } .walk-badge.tight{background:#FFE3DD; color:#A23A1E}
+
+/* ---------- Bottom sheet ---------- */ .sheet{
+  display:none; position:fixed; inset:0; z-index:40; background:rgba(11,29,50,.55);
+  align-items:flex-end; justify-content:center; } .sheet.on{display:flex} .panel{
+  width:100%; max-width:560px; background:var(--surface); border-radius:22px 22px 0 0;
+  padding:22px 20px 26px; max-height:85vh; overflow-y:auto;
+  animation:rise .22s ease-out;
+}
+@keyframes rise{from{transform:translateY(16px); opacity:.4} to{transform:translateY(0); opacity:1}} .panel .handle{width:36px; height:4px; background:var(--line); border-radius:99px; margin:0 auto 16px} .panel .pft{display:inline-block; background:var(--signal); color:#fff; font-size:11px; font-weight:800; border-radius:999px; padding:3px 10px; margin-bottom:8px} .panel h2{margin:0 0 4px; font-size:19px; line-height:1.3} .panel .when{color:var(--slate); font-size:13.5px; margin:0 0 14px} .panel .block{border-top:1px solid var(--line); padding:12px 0} .panel .block .lbl{font-size:11px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px} .panel .block .val{font-size:14.5px; color:var(--ink); font-weight:600} .panel .tags{margin-top:2px} .panel .walkblock{background:#FFF3DD; border-radius:12px; padding:10px 12px; margin-top:6px} .panel .walkblock b{color:#8A5A00} .panel .actions{display:flex; gap:9px; margin-top:18px} .panel .actions button{
+  flex:1; border:0; border-radius:13px; padding:13px; font-weight:700; font-size:14px; } .btn-primary{background:var(--ink); color:#fff} .btn-ghost{background:var(--pill-bg); color:var(--pill-ink)}
+
+.empty{text-align:center; padding:50px 20px; color:var(--slate)} .empty b{display:block; color:var(--ink); font-size:15px; margin-bottom:4px}
+
+@media(min-width:640px){
+  .toolbar{top:130px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-top">
+    <div>
+      <h1>Compagnon IBC 2026</h1>
+      <p class="venue">RAI Amsterdam · 11–13 septembre 2026</p>
+    </div>
+    <a class="planlink" href="https://directory.ibc.org/8_0/#/" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 6v15l7-3 8 3 7-3V3l-7 3-8-3-7 3z"/><path d="M8 3v15M16 6v15"/></svg>
+      Plan du salon
+    </a>
+  </div>
+  <nav class="days" id="dayNav">
+    <button class="on" data-d="all">Tout<span class="n">62</span></button>
+    <button data-d="11">Ven. 11<span class="n" id="n11">0</span></button>
+    <button data-d="12">Sam. 12<span class="n" id="n12">0</span></button>
+    <button data-d="13">Dim. 13<span class="n" id="n13">0</span></button>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section id="nextBox" class="countdown">
+    <div class="eyebrow">⏱ Prochain rendez-vous</div>
+    <h2 id="nextTitle">Calcul en cours…</h2>
+    <p id="nextWhen" class="when"></p>
+    <div class="clock">
+      <span><b id="cdD">0</b>jours</span>
+      <span><b id="cdH">00</b>heures</span>
+      <span><b id="cdM">00</b>min</span>
+      <span><b id="cdS">00</b>sec</span>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="searchrow">
+      <input id="q" placeholder="Fournisseur, hall, stand…" autocomplete="off">
+      <button id="F" class="ftbtn"><span class="dot"></span>Mes RDV</button>
+    </div>
+    <div class="chiprow" id="catRow"></div>
+    <div class="stats">
+      <span><b id="N">0</b> affichés</span>
+      <span class="sep">·</span>
+      <span><b id="P">0</b> priorités FT</span>
+    </div>
+  </div>
+
+  <div id="timeline"></div>
+  <div id="emptyState" class="empty hidden">
+    <b>Aucun rendez-vous</b>
+    Essayez un autre filtre ou effacez la recherche.
+  </div>
+
+</main>
+
+<div id="modal" class="sheet" onclick="if(event.target===this) closeSheet()"></div>
+
+<script>
+const EVENTS = [{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"07:14","end":"10:50","isTrain":true,"isFT":false,"priority":false,"title":"Train Aller : 07h14 · arrivée 10h50","loc":"Gare du Nord","hall":null,"categories":["Train"],"note":"Oracle","travel":null,"logoDomain":null},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"12:00","end":"12:45","isTrain":false,"isFT":true,"priority":true,"title":"GV | Yannick Veyssiere | AF, TR, FT","loc":"Hall 9 · Stand 9.A01","hall":"9","categories":["Studios"],"note":"","travel":null,"logoDomain":"grassvalley.com"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"13:00","end":"13:30","isTrain":false,"isFT":true,"priority":true,"title":"BROADTEAM | FT,CF","loc":"Hall 2 · Stand 2.B27","hall":"2","categories":["Diffusion"],"note":"","travel":{"from":"Hall 9 · Stand 9.A01","duration":"15 à 20 min","note":"traversée du salon"},"logoDomain":null},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"13:00","end":"14:00","isTrain":false,"isFT":false,"priority":false,"title":"IBC26 | DALET | Massoud Razani | VB, LL, AL, AB, FM","loc":"Hall 7 · Stand 7.A43","hall":"7","categories":["Mediaflows","Post-prod"],"note":"MARTIN FRANCK","travel":null,"logoDomain":"dalet.com"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"13:30","end":"14:30","isTrain":false,"isFT":false,"priority":false,"title":"Ross | Hypermax (mélangeur) | Vincent Loré | AF, VG ?, NR ?, VB ?","loc":"Hall 8 · Stand 8.B91","hall":"8","categories":["Studios"],"note":"","travel":null,"logoDomain":"rossvideo.com"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"14:00","end":"15:00","isTrain":false,"isFT":false,"priority":false,"title":"NXTedition | Roger Persson | VB, LL, AL, AB, FM","loc":"Hall 7 · Stand 7.A02","hall":"7","categories":["Mediaflows","Post-prod"],"note":"MARTIN FRANCK","travel":null,"logoDomain":"nxtedition.com"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"14:30","end":"15:00","isTrain":false,"isFT":true,"priority":true,"title":"AI MEDIA | FT, CF","loc":"Hall 5 · Stand 5.C34","hall":"5","categories":["Diffusion"],"note":"","travel":{"from":"Hall 2 · Stand 2.B27","duration":"7 à 12 min","note":"changement de section"},"logoDomain":null},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"15:00","end":"15:30","isTrain":false,"isFT":false,"priority":false,"title":"Mimir | Yann Heyldauf | VB, LL, AL, FM, MB","loc":"Hall 7 · Stand 7.A53","hall":"7","categories":["Post-prod"],"note":"MARTIN FRANCK","travel":null,"logoDomain":null},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"15:00","end":"16:00","isTrain":false,"isFT":false,"priority":false,"title":"Panasonic | Vincent Heligon | AF, TR","loc":"RAI · 1er étage · Corridor G · Topaz Lounge / Salles G.102–G.104","hall":null,"categories":["Studios"],"note":"","travel":null,"logoDomain":"panasonic.com"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"15:30","end":"16:00","isTrain":false,"isFT":true,"priority":true,"title":"PROVIDIUS | FT,VB","loc":"Hall 10 · Stand 10.D48","hall":"10","categories":["Diffusion"],"note":"","travel":{"from":"Hall 5 · Stand 5.C34","duration":"7 à 12 min","note":"changement de section"},"logoDomain":null},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"15:30","end":"16:00","isTrain":false,"isFT":false,"priority":false,"title":"Saga | Yann Heyldauf | VB, LL, AL, FM, MB","loc":"Hall 7 · Stand 7.A53","hall":"7","categories":["Post-prod"],"note":"MARTIN FRANCK","travel":null,"logoDomain":null},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"16:00","end":"16:30","isTrain":false,"isFT":false,"priority":false,"title":"Appear/M6 IBC","loc":"Hall 1 · Stand 1.C61","hall":"1","categories":["Général"],"note":"","travel":null,"logoDomain":"appear.net"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"16:00","end":"17:00","isTrain":false,"isFT":false,"priority":false,"title":"Bminty - Interra | Muriel Le Bellac | YBO","loc":"Hall 1 · Stand 1.A57","hall":"1","categories":["Mediaflows"],"note":"","travel":null,"logoDomain":null},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"16:00","end":"17:30","isTrain":false,"isFT":false,"priority":false,"title":"EVS | Christophe Deffontaines | LL, AL, VB, BA, GL","loc":"Hall 7 · Stand 7.B11 · EVS IBC 2026","hall":"7","categories":["Post-prod"],"note":"","travel":null,"logoDomain":"evs.com"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"16:30","end":"17:30","isTrain":false,"isFT":true,"priority":true,"title":"Riedel | Gregory | AF, TR, FM, FT","loc":"Hall 10 · Stand 10.A31","hall":"10","categories":["Studios"],"note":"MARTIN FRANCK","travel":{"from":"Hall 10 · Stand 10.D48","duration":"2 à 5 min","note":"même hall"},"logoDomain":"riedel.net"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"17:30","end":"18:00","isTrain":false,"isFT":true,"priority":true,"title":"Lawo | Démo .edge | VB, VR, AL, AF, FM, FT","loc":"Hall 8 · Stand 8.B90","hall":"8","categories":["Studios"],"note":"MARTIN FRANCK","travel":{"from":"Hall 10 · Stand 10.A31","duration":"7 à 12 min","note":"changement de section"},"logoDomain":"lawo.com"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"18:30","end":"20:30","isTrain":false,"isFT":false,"priority":false,"title":"Adobe at IBC 2026 VIP Mixer","loc":"Rosarium Amstelpark · Europaboulevard · 1083 HZ Amsterdam","hall":null,"categories":["Soirée"],"note":"","travel":null,"logoDomain":"adobe.com"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"19:00","end":"23:00","isTrain":false,"isFT":false,"priority":false,"title":"Soirée Sony","loc":"H&#x27;ART Museum, Amstel 51, 1018EJ, Amsterdam","hall":null,"categories":["Soirée"],"note":"","travel":null,"logoDomain":"sony.com"},{"day":"11","dayLabel":"Vendredi 11 septembre","dateShort":"Ven. 11 sept.","start":"21:00","end":"23:00","isTrain":false,"isFT":true,"priority":true,"title":"Diner MBT | FT, CL, FM, MB?","loc":"Lieu à confirmer","hall":null,"categories":["Dîner"],"note":"MARTIN FRANCK","travel":{"from":"Hall 8 · Stand 8.B90","duration":"À estimer","note":"lieu non localisé"},"logoDomain":null},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"09:30","end":"10:15","isTrain":false,"isFT":true,"priority":true,"title":"BBRIGHT | FT, FM","loc":"Hall 2 · Stand 2.B51","hall":"2","categories":["Diffusion"],"note":"MARTIN FRANCK","travel":null,"logoDomain":null},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"09:30","end":"10:30","isTrain":false,"isFT":false,"priority":false,"title":"STAGETEC | Yannick XUEREB | AF, TR","loc":"Hall 8 · Stand 8.C41","hall":"8","categories":["Studios"],"note":"","travel":null,"logoDomain":"stagetec.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"10:00","end":"11:00","isTrain":false,"isFT":false,"priority":false,"title":"Askida | AB","loc":"Hall 1 · Stand 1.C17","hall":"1","categories":["Mediaflows"],"note":"","travel":null,"logoDomain":null},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"10:00","end":"10:45","isTrain":false,"isFT":false,"priority":false,"title":"Octopus NRCS | Ginaluca Bertuzzi | VB, LL, AL, FM ?","loc":"Hall 6 · Stand 6.C12","hall":"6","categories":["Post-prod"],"note":"","travel":null,"logoDomain":null},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"10:30","end":"11:30","isTrain":false,"isFT":true,"priority":true,"title":"Harmonic | FT","loc":"Hall 1 · Stand 1.D71","hall":"1","categories":["Diffusion","Studios"],"note":"MARTIN FRANCK","travel":{"from":"Hall 2 · Stand 2.B51","duration":"2 à 5 min","note":"hall adjacent"},"logoDomain":"harmonicinc.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"10:30","end":"11:30","isTrain":false,"isFT":false,"priority":false,"title":"SONY | Pascal Kerlock | AF TR","loc":"Hall 13 · Stand 13.A10","hall":"13","categories":["Studios"],"note":"","travel":null,"logoDomain":"sony.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"11:00","end":"11:30","isTrain":false,"isFT":false,"priority":false,"title":"CUEZ","loc":"Hall 6 · Stand 6.A23","hall":"6","categories":["Post-prod"],"note":"","travel":null,"logoDomain":"cuez.io"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"11:30","end":"12:00","isTrain":false,"isFT":true,"priority":true,"title":"LORA SOLUTION | FT, YB","loc":"Hall 2A · Stand 2A.30A","hall":"2","categories":["Diffusion","Personnel"],"note":"","travel":{"from":"Hall 1 · Stand 1.D71","duration":"2 à 5 min","note":"hall adjacent"},"logoDomain":null},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"11:30","end":"12:00","isTrain":false,"isFT":false,"priority":false,"title":"Videndum | Thomas Brechignac | AF, TR","loc":"Hall 13 · Stand 13.A05","hall":"13","categories":["Studios"],"note":"","travel":null,"logoDomain":"videndum.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"12:00","end":"12:45","isTrain":false,"isFT":false,"priority":false,"title":"AVID | Vincent Ménard | VB, AL, LL, FM, AB | Private Demo","loc":"Hall 7 · Stand 7.B59","hall":"7","categories":["Mediaflows","Post-prod"],"note":"","travel":null,"logoDomain":"avid.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"12:00","end":"12:30","isTrain":false,"isFT":true,"priority":true,"title":"OBVTV | FT","loc":"Hall 7 · Stand 7.D43","hall":"7","categories":["Diffusion","Personnel"],"note":"","travel":{"from":"Hall 2A · Stand 2A.30A","duration":"7 à 12 min","note":"changement de section"},"logoDomain":null},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"13:00","end":"13:45","isTrain":false,"isFT":false,"priority":false,"title":"AVID - Exec Meeting","loc":"Hall 7 · Stand 7.B59 · Salle Exec 1","hall":"7","categories":["Post-prod"],"note":"","travel":null,"logoDomain":"avid.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"13:00","end":"13:25","isTrain":false,"isFT":false,"priority":false,"title":"Adobe | Frédéric Rolland | VB, AL, LL","loc":"Hall 7 · Stand 7.B35","hall":"7","categories":["Post-prod"],"note":"","travel":null,"logoDomain":"adobe.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"13:00","end":"14:00","isTrain":false,"isFT":true,"priority":true,"title":"Telestream | AB, YB, FT","loc":"Hall 7 · Stand 7.B21","hall":"7","categories":["Mediaflows"],"note":"","travel":{"from":"Hall 7 · Stand 7.D43","duration":"2 à 5 min","note":"même hall"},"logoDomain":"telestream.net"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"13:30","end":"14:00","isTrain":false,"isFT":false,"priority":false,"title":"Deliver media","loc":"Hall 8 · Stand 8.A57","hall":"8","categories":["Diffusion"],"note":"","travel":null,"logoDomain":null},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"14:00","end":"14:45","isTrain":false,"isFT":false,"priority":false,"title":"BMD (Da Vinci Resolve) | Alexander Stoyanov | VB, AL, LL","loc":"Hall 7 · Stand 7.C49","hall":"7","categories":["Post-prod"],"note":"","travel":null,"logoDomain":"blackmagicdesign.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"14:00","end":"15:00","isTrain":false,"isFT":true,"priority":true,"title":"EVS | R. Couzon C. Deffontaine | AF, TR, FM, FT","loc":"Hall 7 · Stand 7.B11","hall":"7","categories":["Studios"],"note":"MARTIN FRANCK","travel":{"from":"Hall 7 · Stand 7.B21","duration":"2 à 5 min","note":"même hall"},"logoDomain":"evs.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"14:00","end":"14:30","isTrain":false,"isFT":false,"priority":false,"title":"Perfect Memory - AB","loc":"Hall 7 · Stand 7.C17 · Perfect Memory","hall":"7","categories":["Mediaflows"],"note":"","travel":null,"logoDomain":"perfect-memory.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"15:00","end":"15:45","isTrain":false,"isFT":false,"priority":false,"title":"ENPS (AP - NRCS) | Esme Martin | VB, AL, LL","loc":"Hall 7 · Stand 7.A19","hall":"7","categories":["Post-prod"],"note":"","travel":null,"logoDomain":"enps.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"15:00","end":"15:30","isTrain":false,"isFT":true,"priority":true,"title":"EVERTZ | FT","loc":"Hall 2 · Stand 2.B51","hall":"2","categories":["Diffusion","Personnel"],"note":"","travel":{"from":"Hall 7 · Stand 7.B11","duration":"7 à 12 min","note":"changement de section"},"logoDomain":"evertz.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"15:00","end":"15:30","isTrain":false,"isFT":false,"priority":false,"title":"MEDIA SOLUTION - SPOTL | MB","loc":"Hall 1 · Stand 1.C21A · Vianeos","hall":"1","categories":["Général"],"note":"MARTIN FRANCK","travel":null,"logoDomain":null},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"16:00","end":"17:00","isTrain":false,"isFT":false,"priority":false,"title":"Adobe | Fred Rolland | VB, AL, LL, FM ? AB ?","loc":"Hall 7 · Stand 7.B35","hall":"7","categories":["Post-prod"],"note":"","travel":null,"logoDomain":"adobe.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"16:00","end":"16:45","isTrain":false,"isFT":true,"priority":true,"title":"IMAGINE | FT (Olivier Lecocq)","loc":"Hall 1 · Stand 1.B73","hall":"1","categories":["Diffusion","Personnel"],"note":"","travel":{"from":"Hall 2 · Stand 2.B51","duration":"2 à 5 min","note":"hall adjacent"},"logoDomain":null},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"16:30","end":"17:00","isTrain":false,"isFT":false,"priority":false,"title":"TRACKIT (sur le stand AWS) Pierre Schroth","loc":"Hall 5 · Stand 5.C90 · AWS","hall":"5","categories":["Mediaflows"],"note":"","travel":null,"logoDomain":"aws.amazon.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"17:00","end":"18:00","isTrain":false,"isFT":true,"priority":true,"title":"AWS | Sébastien GEORGES | FM, FT","loc":"Hall 5 · Stand 5.C90","hall":"5","categories":["Mediaflows","Post-prod"],"note":"MARTIN FRANCK","travel":{"from":"Hall 1 · Stand 1.B73","duration":"7 à 12 min","note":"changement de section"},"logoDomain":"aws.amazon.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"17:00","end":"20:00","isTrain":false,"isFT":false,"priority":false,"title":"LucidLink (lien en corps)","loc":"Lieu à confirmer","hall":null,"categories":["Général"],"note":"","travel":null,"logoDomain":"lucidlink.com"},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"18:00","end":"22:00","isTrain":false,"isFT":false,"priority":false,"title":"Soirée BCE","loc":"Van der Valk Hotel Zuidas · Tommaso Albinonistraat 200 · 1083 HM Amsterdam","hall":null,"categories":["Soirée"],"note":"","travel":null,"logoDomain":null},{"day":"12","dayLabel":"Samedi 12 septembre","dateShort":"Sam. 12 sept.","start":"18:30","end":"23:00","isTrain":false,"isFT":false,"priority":false,"title":"Soirée Ross (Lien inscription joint) - BADGE IBC Obligatoire","loc":"Amstel Boathouse – De Orangerie · Amsteldijk 223 · 1079 LK Amsterdam","hall":null,"categories":["Soirée"],"note":"","travel":null,"logoDomain":"rossvideo.com"},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"09:30","end":"10:00","isTrain":false,"isFT":false,"priority":false,"title":"Démo Avid #2 LL, VB","loc":"Hall 7 · Stand 7.B59 · Pod 4","hall":"7","categories":["Général"],"note":"","travel":null,"logoDomain":"avid.com"},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"10:00","end":"11:00","isTrain":false,"isFT":false,"priority":false,"title":"ICONIK (Démo) - Rosa Pereiro - AL, LL, AL, BA, GL","loc":"Hall 1 · Stand 1.D09","hall":"1","categories":["Post-prod"],"note":"","travel":null,"logoDomain":"backlight.co"},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"10:00","end":"10:30","isTrain":false,"isFT":false,"priority":false,"title":"Telstra | Sandy Isnard | MB, MB","loc":"Hall 5 · Stand 5.C71","hall":"5","categories":["Général"],"note":"MARTIN FRANCK","travel":null,"logoDomain":"telstra.com"},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"10:30","end":"11:15","isTrain":false,"isFT":true,"priority":true,"title":"INETSAT | FT","loc":"Hall 2 · Stand 2.C53","hall":"2","categories":["Diffusion","Personnel"],"note":"","travel":null,"logoDomain":null},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"11:00","end":"12:00","isTrain":false,"isFT":false,"priority":false,"title":"ICONIK (Backlight) - Exec Meeting - AB, FM, MB","loc":"Hall 1 · Stand 1.D09","hall":"1","categories":["Mediaflows","Post-prod"],"note":"","travel":null,"logoDomain":"backlight.co"},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"12:00","end":"13:00","isTrain":false,"isFT":false,"priority":false,"title":"M6 x NVIDIA","loc":"Hall 1 · Salle NVIDIA Voyager · 1.BS5","hall":"1","categories":["Général"],"note":"","travel":null,"logoDomain":"nvidia.com"},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"12:00","end":"12:45","isTrain":false,"isFT":true,"priority":true,"title":"SENCORE |FT","loc":"Hall 1 · Stand 1.D64","hall":"1","categories":["Diffusion"],"note":"","travel":{"from":"Hall 2 · Stand 2.C53","duration":"2 à 5 min","note":"hall adjacent"},"logoDomain":"sencore.com"},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"12:30","end":"12:55","isTrain":false,"isFT":false,"priority":false,"title":"Ross | Indigo (NRCS) | Vincent Loré | VB, LL, AL, FM","loc":"Hall 8 · Stand 8.B91","hall":"8","categories":["Post-prod"],"note":"MARTIN FRANCK","travel":null,"logoDomain":"rossvideo.com"},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"13:00","end":"13:30","isTrain":false,"isFT":false,"priority":false,"title":"On Hertz - Benjamin Lardinoit","loc":"Hall 8 · Stand 8.F81","hall":"8","categories":["Général"],"note":"","travel":null,"logoDomain":null},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"13:00","end":"13:30","isTrain":false,"isFT":false,"priority":false,"title":"TrackIT","loc":"Lieu à confirmer","hall":null,"categories":["Mediaflows"],"note":"","travel":null,"logoDomain":null},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"14:00","end":"14:45","isTrain":false,"isFT":true,"priority":true,"title":"HEXAGLOBE | FT","loc":"Hall 2 · Stand 2.B51","hall":"2","categories":["Diffusion","Personnel"],"note":"","travel":{"from":"Hall 1 · Stand 1.D64","duration":"2 à 5 min","note":"hall adjacent"},"logoDomain":null},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"14:00","end":"14:30","isTrain":false,"isFT":false,"priority":false,"title":"LucidLink (Ivory + Askida) | Tom Hollmes | VB, AL, LL, FM","loc":"Hall 7 · Stand 7.C19","hall":"7","categories":["Post-prod"],"note":"MARTIN FRANCK","travel":null,"logoDomain":"lucidlink.com"},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"14:30","end":"15:30","isTrain":false,"isFT":false,"priority":false,"title":"Codemill | Neil Anderson | VB, AL, LL, YB, FM ?","loc":"Hall 6 · Stand 6.C11","hall":"6","categories":["Mediaflows","Post-prod"],"note":"","travel":null,"logoDomain":"codemill.se"},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"15:00","end":"15:30","isTrain":false,"isFT":true,"priority":true,"title":"ANYWARE | FT","loc":"Hall 8 · Stand 8.A57","hall":"8","categories":["Diffusion"],"note":"","travel":{"from":"Hall 2 · Stand 2.B51","duration":"15 à 20 min","note":"traversée du salon"},"logoDomain":null},{"day":"13","dayLabel":"Dimanche 13 septembre","dateShort":"Dim. 13 sept.","start":"17:08","end":"20:44","isTrain":true,"isFT":false,"priority":false,"title":"Train Retour : 17h08 · arrivée 20h44","loc":"Amsterdam Centraal","hall":null,"categories":["Train"],"note":"Oracle","travel":null,"logoDomain":null}];
+
+const DAY_LABEL = {11:'Vendredi 11 septembre', 12:'Samedi 12 septembre', 13:'Dimanche 13 septembre'}; const DAY_HOURS = {11:'10:30–18:00', 12:'09:30–18:00', 13:'09:30–18:00'}; const DAY_YEAR = 2026, DAY_MONTH = 8; // September (0-indexed)
+
+let state = { day:'all', onlyFT:false, q:'', cat:null };
+
+const LOC_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s-7-7.2-7-12a7 7 0 1 1 14 0c0 4.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>';
+
+function eventDate(ev){
+  const [h,m] = ev.start.split(':').map(Number);
+  return new Date(DAY_YEAR, DAY_MONTH, Number(ev.day), h, m); } function endDate(ev){
+  if(!ev.end) return eventDate(ev);
+  const [h,m] = ev.end.split(':').map(Number);
+  return new Date(DAY_YEAR, DAY_MONTH, Number(ev.day), h, m); }
+
+// ---------- category chips ----------
+const CAT_ORDER = ['Diffusion','Mediaflows','Post-prod','Studios','Personnel','Soirée','Dîner','Général','Train'];
+function buildCatRow(){
+  const present = new Set();
+  EVENTS.forEach(e => e.categories.forEach(c => present.add(c)));
+  const row = document.getElementById('catRow');
+  const cats = CAT_ORDER.filter(c => present.has(c));
+  row.innerHTML = ['<button class="chip on" data-c="">Toutes catégories</button>']
+    .concat(cats.map(c => `<button class="chip" data-c="${c}">${c}</button>`)).join('');
+  row.querySelectorAll('.chip').forEach(btn => btn.onclick = () => {
+    row.querySelectorAll('.chip').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    state.cat = btn.dataset.c || null;
+    render();
+  });
+}
+
+// ---------- day counts ----------
+function updateDayCounts(){
+  [11,12,13].forEach(d => {
+    document.getElementById('n'+d).textContent = EVENTS.filter(e => Number(e.day)===d).length;
+  });
+}
+
+// ---------- render ----------
+function matches(ev){
+  if(state.day !== 'all' && ev.day !== state.day) return false;
+  if(state.onlyFT && !ev.isFT) return false;
+  if(state.cat && !ev.categories.includes(state.cat)) return false;
+  if(state.q){
+    const hay = (ev.title+' '+ev.loc+' '+ev.categories.join(' ')+' '+ev.note).toLowerCase();
+    if(!hay.includes(state.q)) return false;
+  }
+  return true;
+}
+
+function walkBadge(travel){
+  if(!travel || !travel.duration) return '';
+  const tight = /1[5-9]|2\d/.test(travel.duration) || /traversée/i.test(travel.note||'');
+  return `<div class="walk"><span class="walk-line"></span><span class="walk-badge ${tight?'tight':''}">🚶 ${travel.duration}${travel.note ? ' · '+travel.note : ''}</span></div>`; }
+
+function cardHTML(ev, idx, isPast){
+  const isSocial = ev.categories.includes('Soirée') || ev.categories.includes('Dîner');
+  const kindClass = [
+    ev.isTrain ? 'train' : '',
+    ev.isFT ? 'ft' : '',
+    isSocial ? 'social' : ''
+  ].filter(Boolean).join(' ');
+  const icon = ev.isTrain ? '🚆 ' : (isSocial ? '🍸 ' : '');
+  return `
+  <div class="item ${kindClass} ${isPast?'past':''}" data-idx="${idx}">
+    <div class="marker"><span class="mdate">${ev.dateShort}</span><b>${ev.start}</b><small>${ev.end ? '– '+ev.end : ''}</small></div>
+    ${ev.travel ? walkBadge(ev.travel) : ''}
+    <button class="card" onclick="openSheet(${idx})">
+      <div class="card-top">
+        <div class="card-top-main">
+          <h3>${icon}${escapeHtml(ev.title)}</h3>
+        </div>
+        ${ev.isFT ? '<span class="ftbadge">FT</span>' : ''}
+      </div>
+      <p class="loc">${LOC_ICON} ${escapeHtml(ev.loc)}</p>
+      <div class="tags">${ev.categories.map(c=>`<span class="tag">${c}</span>`).join('')}</div>
+      ${ev.note ? `<p class="note">${escapeHtml(ev.note)}</p>` : ''}
+    </button>
+  </div>`;
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+function render(){
+  const now = new Date();
+  const days = state.day === 'all' ? ['11','12','13'] : [state.day];
+  let n=0, p=0;
+  let html = '';
+  days.forEach(d => {
+    const items = EVENTS.map((e,i)=>({e,i})).filter(x => x.e.day===d && matches(x.e));
+    if(!items.length) return;
+    n += items.length;
+    p += items.filter(x=>x.e.isFT).length;
+    html += `<div class="daygroup"><h2>${DAY_LABEL[d]}<span class="line"></span><span class="dayhours">Salon ouvert ${DAY_HOURS[d]}</span></h2><div class="rail">`;
+    items.forEach(({e,i}) => {
+      const past = endDate(e) < now;
+      html += cardHTML(e, i, past);
+    });
+    html += `</div></div>`;
+  });
+  document.getElementById('timeline').innerHTML = html;
+  document.getElementById('N').textContent = n;
+  document.getElementById('P').textContent = p;
+  document.getElementById('emptyState').classList.toggle('hidden', n>0); }
+
+// ---------- sheet ----------
+function openSheet(idx){
+  const e = EVENTS[idx];
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `<div class="panel">
+    <div class="handle"></div>
+    ${e.isFT ? '<span class="pft">Rendez-vous FT</span>' : ''}
+    <h2>${e.isTrain?'🚆 ':(e.categories.includes('Soirée')||e.categories.includes('Dîner')?'🍸 ':'')}${escapeHtml(e.title)}</h2>
+    <p class="when">${e.dayLabel} · ${e.start}${e.end?' – '+e.end:''}</p>
+    <div class="block">
+      <div class="lbl">Lieu</div>
+      <div class="val">${escapeHtml(e.loc)}</div>
+    </div>
+    ${e.categories.length ? `<div class="block"><div class="lbl">Catégorie</div><div class="tags">${e.categories.map(c=>`<span class="tag">${c}</span>`).join('')}</div></div>` : ''}
+    ${e.note ? `<div class="block"><div class="lbl">Note</div><div class="val">${escapeHtml(e.note)}</div></div>` : ''}
+    ${e.travel ? `<div class="block"><div class="lbl">Trajet à pied</div><div class="walkblock"><b>${e.travel.duration}</b> depuis ${escapeHtml(e.travel.from)}${e.travel.note?' · '+e.travel.note:''}</div></div>` : ''}
+    <div class="actions">
+      <button class="btn-ghost" onclick="copyInfo(${idx})">Copier</button>
+      <button class="btn-primary" onclick="closeSheet()">Fermer</button>
+    </div>
+  </div>`;
+  modal.classList.add('on');
+}
+function closeSheet(){ document.getElementById('modal').classList.remove('on'); } function copyInfo(idx){
+  const e = EVENTS[idx];
+  const txt = `${e.title}\n${e.dayLabel} · ${e.start}${e.end?'–'+e.end:''}\n${e.loc}`;
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).catch(()=>{});
+}
+
+// ---------- countdown ----------
+function tick(){
+  const now = new Date();
+  let next = null;
+  EVENTS.forEach(e => {
+    if(!(e.isFT || e.isTrain)) return;
+    const at = eventDate(e);
+    if(at > now && (!next || at < next.at)) next = {at, e};
+  });
+  const box = document.getElementById('nextBox');
+  if(!next){
+    box.classList.add('done');
+    document.getElementById('nextTitle').textContent = 'Agenda terminé';
+    document.getElementById('nextWhen').textContent = 'Aucun rendez-vous à venir';
+    ['cdD','cdH','cdM','cdS'].forEach(id=>document.getElementById(id).textContent = id==='cdD'?'0':'00');
+    return;
+  }
+  box.classList.remove('done');
+  document.getElementById('nextTitle').textContent = (next.e.isTrain?'🚆 ':'') + next.e.title;
+  document.getElementById('nextWhen').textContent = `${next.e.dayLabel} · ${next.e.start} · ${next.e.loc}`;
+  let s = Math.max(0, Math.floor((next.at-now)/1000));
+  const d = Math.floor(s/86400); s%=86400;
+  const h = Math.floor(s/3600); s%=3600;
+  const m = Math.floor(s/60); s%=60;
+  document.getElementById('cdD').textContent = d;
+  document.getElementById('cdH').textContent = String(h).padStart(2,'0');
+  document.getElementById('cdM').textContent = String(m).padStart(2,'0');
+  document.getElementById('cdS').textContent = String(s).padStart(2,'0'); }
+
+// ---------- wiring ----------
+document.querySelectorAll('.days button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.days button').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    state.day = btn.dataset.d;
+    render();
+  };
+});
+document.getElementById('q').oninput = (e) => { state.q = e.target.value.toLowerCase(); render(); }; document.getElementById('F').onclick = () => {
+  state.onlyFT = !state.onlyFT;
+  document.getElementById('F').classList.toggle('on', state.onlyFT);
+  render();
+};
+
+buildCatRow();
+updateDayCounts();
+render();
+tick();
+setInterval(tick, 1000);
+setInterval(render, 60000); // refresh "past" dimming each minute </script> </body> </html>

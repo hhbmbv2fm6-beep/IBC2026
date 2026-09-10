@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STOD Log Analyzer</title>
+<link rel="icon" type="image/png" href="inputs/zoom.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#080e1a; --surface:#0d1526; --surface2:#121e33;
+    --border:#1e3050; --text:#ccd9ee; --muted:#5a7a9a;
+    --accent:#f59e0b; --green:#10b981; --red:#ef4444;
+    --orange:#f97316; --purple:#8b5cf6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;font-size:13px;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+  #body-top{flex:0 0 auto;}
+  #body-main{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  header h1{font-size:22px;font-weight:700;color:#e8dcc8;position:relative;display:inline-block;}
+  header h1 span.h1-text{background:linear-gradient(105deg,#3a5070 20%,#e8dcc8 44%,#ffffff 50%,#e8dcc8 56%,#3a5070 80%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:h1-shine 10s linear infinite;display:inline;}
+  @keyframes h1-shine{0%{background-position:200% center;}100%{background-position:-100% center;}}
+  .badge{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:11px;color:var(--muted);}
+  #badge-range{background:transparent;border:none;padding:0;font-size:13px;font-weight:700;color:#e8dcc8;font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;letter-spacing:.04em;}
+  #badge-range:not(:empty)::before{content:'';display:inline-block;width:1px;height:14px;background:var(--border);margin-right:12px;vertical-align:middle;}
+  /* ── Spinner ── */
+  #spinner-overlay{display:none;position:fixed;inset:0;z-index:2000;background:rgba(8,14,26,.72);align-items:center;justify-content:center;flex-direction:column;gap:18px;}
+  #spinner-overlay.on{display:flex;}
+  #spinner-ring{width:240px;height:240px;border:10px solid rgba(232,220,200,.15);border-top-color:#e8dcc8;border-radius:50%;animation:spin .8s linear infinite;}
+  #spinner-label{font-size:13px;color:#e8dcc8;letter-spacing:.08em;}
+  #spinner-progress{width:220px;display:none;flex-direction:column;align-items:center;gap:6px;}
+  #spinner-progress.on{display:flex;}
+  #spinner-prog-track{width:100%;height:4px;background:rgba(232,220,200,.15);border-radius:2px;overflow:hidden;}
+  #spinner-prog-fill{height:100%;background:#e8dcc8;width:0;transition:width .1s;}
+  #spinner-prog-counter{font-size:11px;color:var(--muted);font-family:'Consolas','Courier New',monospace;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  #copyright-btn{margin-left:auto;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap;user-select:none;transition:color .2s;}
+  #copyright-btn:hover{color:#e8dcc8;}
+  #copyright-modal{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.6);align-items:center;justify-content:center;}
+  #copyright-modal.open{display:flex;}
+  #copyright-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px 36px;max-width:420px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.6);}
+  #copyright-box img.cp-logo{display:block;margin:0 auto 18px;max-height:56px;object-fit:contain;}
+  #copyright-box h2{font-size:13px;font-weight:700;color:#e8dcc8;margin-bottom:16px;letter-spacing:.06em;text-transform:uppercase;}
+  #copyright-box p{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:6px;}
+  #copyright-box .cp-muted{font-size:11px;color:var(--muted);margin-top:12px;}
+  #copyright-close{margin-top:20px;background:#e8dcc8;color:#080e1a;border:none;border-radius:4px;padding:5px 20px;font-weight:700;font-size:12px;cursor:pointer;}
+  #copyright-close:hover{opacity:.85;}
+
+  .toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  label.lbl{color:var(--muted);font-size:11px;white-space:nowrap;}
+  input[type=date],input[type=time],input[type=number]{
+    background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    border-radius:4px;padding:4px 8px;font-family:inherit;font-size:12px;
+    color-scheme:dark;
+  }
+  input[type=time]{width:115px;}
+  input[type=number]{width:70px;}
+  input[type=text]{background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    border-radius:4px;padding:4px 8px;font-family:inherit;font-size:12px;width:200px;}
+  .btn{background:#e8dcc8;color:#080e1a;border:none;border-radius:4px;padding:5px 14px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;}
+  .btn:hover{opacity:.85;}
+  .btn.sec{background:#e8dcc8;color:#080e1a;border:none;}
+  .btn.sec:hover{filter:brightness(1.1);}
+  .ctrl{display:flex;align-items:center;gap:6px;}
+  .vsep{width:1px;background:var(--border);height:22px;margin:0 4px;}
+
+  /* ── Drop zone ── */
+  .drop-label{
+    display:inline-flex;align-items:center;gap:8px;
+    border:2px dashed var(--border);border-radius:6px;
+    padding:8px 16px;color:var(--muted);cursor:pointer;
+    transition:border-color .2s,background .2s;font-size:12px;
+  }
+  .drop-label:hover,.drop-label.over{border-color:var(--accent);background:rgba(88,166,255,.06);color:var(--text);}
+  .drop-label svg{flex-shrink:0;}
+  #file-input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;}
+
+  /* ── Progress ── */
+  #progress-bar{height:3px;background:var(--surface2);visibility:hidden;}
+  #progress-fill{height:100%;background:#e8dcc8;width:0;transition:width .1s;}
+
+  /* ── Status bar ── */
+  #status-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:5px 20px;font-size:11px;color:var(--muted);display:flex;gap:20px;flex-wrap:wrap;}
+  #status-bar b{color:var(--text);}
+  #s-errors{color:var(--red)!important;}
+
+  /* ── Filter row ── */
+  .filter-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 20px;background:var(--surface);border-bottom:1px solid var(--border);}
+  .chip{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:2px 10px;font-size:11px;cursor:pointer;transition:background .15s,border-color .15s;white-space:nowrap;}
+  .chip.active{border-color:#58a6ff;color:#58a6ff;background:rgba(88,166,255,.1);}
+  .chip.EXE.active{border-color:var(--green);color:#6ee7c0;background:rgba(16,185,129,.08);
+    text-shadow:0 0 4px #fff,0 0 10px #10b981,0 0 20px #10b981;
+    box-shadow:0 0 4px #10b981,0 0 12px rgba(16,185,129,.65),0 0 28px rgba(16,185,129,.3),inset 0 0 8px rgba(16,185,129,.1);}
+  .chip.DEBUG.active{border-color:#38bdf8;color:#bae6fd;background:rgba(56,189,248,.08);
+    text-shadow:0 0 4px #fff,0 0 10px #38bdf8,0 0 20px #38bdf8;
+    box-shadow:0 0 4px #38bdf8,0 0 12px rgba(56,189,248,.6),0 0 28px rgba(56,189,248,.3),inset 0 0 8px rgba(56,189,248,.1);}
+  .chip.RECVD.active{border-color:var(--purple);color:#c4b5fd;background:rgba(139,92,246,.08);
+    text-shadow:0 0 4px #fff,0 0 10px #8b5cf6,0 0 20px #8b5cf6;
+    box-shadow:0 0 4px #8b5cf6,0 0 12px rgba(139,92,246,.65),0 0 28px rgba(139,92,246,.3),inset 0 0 8px rgba(139,92,246,.1);}
+  .chip.SEND.active{border-color:#34d399;color:#a7f3d0;background:rgba(52,211,153,.08);
+    text-shadow:0 0 4px #fff,0 0 10px #34d399,0 0 20px #34d399;
+    box-shadow:0 0 4px #34d399,0 0 12px rgba(52,211,153,.65),0 0 28px rgba(52,211,153,.3),inset 0 0 8px rgba(52,211,153,.1);}
+  .chip.ERROR.active{border-color:var(--red);color:#fca5a5;background:rgba(239,68,68,.08);
+    text-shadow:0 0 4px #fff,0 0 10px #ef4444,0 0 20px #ef4444;
+    box-shadow:0 0 4px #ef4444,0 0 12px rgba(239,68,68,.7),0 0 28px rgba(239,68,68,.35),inset 0 0 8px rgba(239,68,68,.1);}
+  .chip.WARNING.active{border-color:var(--orange);color:#fed7aa;background:rgba(249,115,22,.08);
+    text-shadow:0 0 4px #fff,0 0 10px #f97316,0 0 20px #f97316;
+    box-shadow:0 0 4px #f97316,0 0 12px rgba(249,115,22,.65),0 0 28px rgba(249,115,22,.3),inset 0 0 8px rgba(249,115,22,.1);}
+  .chip.EXCPT.active{border-color:#f43f5e;color:#fda4af;background:rgba(244,63,94,.08);
+    text-shadow:0 0 4px #fff,0 0 10px #f43f5e,0 0 20px #f43f5e;
+    box-shadow:0 0 4px #f43f5e,0 0 12px rgba(244,63,94,.7),0 0 28px rgba(244,63,94,.35),inset 0 0 8px rgba(244,63,94,.1);}
+
+  /* ── Main layout ── */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+
+  /* Timeline */
+  #tl-container{flex:0 0 auto;background:#0a1a2e;border-bottom:2px solid var(--border);}
+  #tl-header{display:flex;align-items:center;justify-content:space-between;padding:5px 12px;border-bottom:1px solid var(--border);}
+  #tl-header span{font-size:10px;color:var(--muted);}
+  #tl-header #tl-left,#tl-header #tl-right{font-size:15px;font-weight:700;color:#f5f2ea;font-family:'Consolas','Courier New',monospace;letter-spacing:.02em;}
+  #canvas-wrap{position:relative;overflow:visible;}
+  canvas#tl-canvas{display:block;cursor:crosshair;}
+  #zoom-rect{position:absolute;top:0;bottom:0;background:rgba(88,166,255,.12);border-left:1px solid var(--accent);border-right:1px solid var(--accent);pointer-events:none;display:none;}
+  #drag-rect{position:absolute;top:0;bottom:0;background:rgba(232,220,200,.15);border-left:2px solid #e8dcc8;border-right:2px solid #e8dcc8;pointer-events:none;display:none;}
+
+  /* Swimlanes */
+  #swim-header{display:flex;align-items:center;justify-content:center;padding:4px 12px;background:var(--surface2);border-top:2px solid var(--border);border-bottom:1px solid var(--border);flex:0 0 auto;}
+  #swim-header span{font-size:11px;font-weight:700;color:#e8dcc8;letter-spacing:.08em;}
+  #swimlanes{flex:0 0 auto;overflow-y:auto;height:200px;background:var(--surface);}
+  #swim-resize{height:6px;background:var(--border);cursor:row-resize;flex:0 0 6px;position:relative;z-index:20;transition:background .15s;border-bottom:2px solid var(--border);}
+  #swim-resize:hover,#swim-resize.dragging{background:var(--accent);}
+  #swim-resize::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:40px;height:2px;background:currentColor;border-radius:2px;opacity:.4;}
+  .swim-row{display:flex;align-items:center;border-bottom:1px solid var(--border);height:26px;}
+  .swim-axis-row{display:flex;align-items:center;border-bottom:1px solid var(--border);height:28px;position:sticky;top:0;z-index:5;background:var(--surface2);}
+  .swim-lbl{width:230px;min-width:230px;padding:0 10px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--border);height:100%;display:flex;align-items:center;}
+  .swim-cv-wrap{flex:1;position:relative;height:26px;overflow:hidden;}
+  .swim-axis-wrap{flex:1;position:relative;height:28px;overflow:hidden;}
+  canvas.swim-cv{position:absolute;top:0;left:0;}
+  canvas.swim-axis{display:block;}
+  @keyframes chip-alert{
+    0%,100%{border-color:#7a1a1a;color:#7a2a2a;background:rgba(239,68,68,.04);box-shadow:none;}
+    50%{border-color:#ff3333;color:#fff;background:rgba(239,68,68,.35);box-shadow:0 0 6px #ef4444,0 0 16px rgba(239,68,68,.9),0 0 32px rgba(239,68,68,.5);}
+  }
+  .chip-alert{animation:chip-alert 1.4s ease-in-out infinite;}
+
+  /* Table */
+  #table-wrap{flex:1;overflow-y:auto;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{background:var(--surface);position:sticky;top:0;z-index:10;padding:5px 10px;text-align:left;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;}
+  tbody tr{border-bottom:1px solid #1e2328;}
+  tbody tr:hover{background:var(--surface2);}
+  tr.sync-a{background:rgba(56,189,248,.08);border-left:3px solid #38bdf8;}
+  tr.sync-a td.ts{color:#38bdf8;font-weight:700;}
+  tr.sync-a:hover{background:rgba(56,189,248,.15);}
+  tr.sync-b{background:rgba(59,130,246,.08);border-left:3px solid #3b82f6;}
+  tr.sync-b td.ts{color:#3b82f6;font-weight:700;}
+  tr.sync-b:hover{background:rgba(59,130,246,.15);}
+  .sync-badge-a{display:inline-flex;align-items:center;gap:3px;background:#0c2a38;border:1px solid #38bdf8;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;color:#38bdf8;vertical-align:middle;margin-left:6px;white-space:nowrap;}
+  .sync-badge-b{display:inline-flex;align-items:center;gap:3px;background:#0e1e3a;border:1px solid #3b82f6;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;color:#3b82f6;vertical-align:middle;margin-left:6px;white-space:nowrap;}
+  td{padding:5px 10px;font-size:14px;white-space:nowrap;}
+  td.msg{white-space:normal;word-break:break-word;max-width:58vw;font-family:'Consolas','Courier New',monospace;font-size:14px;}
+  td.ts{color:var(--muted);font-size:13px;font-family:'Consolas','Courier New',monospace;}
+  td.src{color:#58a6ff;font-size:13px;max-width:170px;overflow:hidden;text-overflow:ellipsis;}
+  .tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;}
+  .tag-EXE{background:#0a2a20;color:#10b981;}
+  .tag-DEBUG{background:#0a1e30;color:#38bdf8;}
+  .tag-RECVD{background:#1a1040;color:#8b5cf6;}
+  .tag-SEND{background:#0a2820;color:#34d399;}
+  .tag-ERROR{background:#2a0e0e;color:#ef4444;}
+  .tag-WARNING{background:#2a1808;color:#f97316;}
+  .tag-EXCPT{background:#2a0818;color:#f43f5e;}
+  .no-data{text-align:center;padding:40px;color:var(--muted);}
+  tr.err-row{background:rgba(239,68,68,.06);}
+
+  /* ── Resize handle ── */
+  .resize-h{height:6px;background:var(--border);cursor:row-resize;flex:0 0 6px;position:relative;z-index:20;transition:background .15s;}
+  .resize-h:hover,.resize-h.dragging{background:var(--accent);}
+  .resize-h::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:40px;height:2px;background:currentColor;border-radius:2px;opacity:.4;}
+
+  /* ── Analysis panel ── */
+  #analysis-panel{flex:0 0 240px;min-height:80px;max-height:60vh;background:var(--surface);display:flex;flex-direction:column;overflow:hidden;border-top:1px solid var(--border);}
+  #ap-header{display:flex;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface2);}
+  .ap-tab{padding:7px 14px;font-size:11px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;}
+  .ap-tab:hover{color:var(--text);}
+  .ap-tab.active{color:#e8dcc8;border-bottom-color:#e8dcc8;}
+  #ap-scope{font-size:10px;color:var(--muted);padding:0 12px;margin-left:auto;}
+  #ap-body{flex:1;overflow-y:auto;padding:10px 14px;}
+  #ap-tab-histogram,#ap-tab-list{display:none;}
+
+  /* ── Synthèse cards ── */
+  .ap-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;align-items:start;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .ap-sec-title{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+
+  /* ligne de kpi */
+  .kpi-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .kpi-card{flex:1;min-width:90px;background:var(--surface2);border:1px solid var(--border);border-top:2px solid var(--border);border-radius:5px;padding:7px 10px;cursor:pointer;transition:background .15s;}
+  .kpi-card:hover{background:#1a2a3a;}
+  .kpi-val{font-size:22px;font-weight:700;line-height:1;}
+  .kpi-lbl{font-size:10px;color:var(--muted);margin-top:3px;}
+  .kpi-sub{font-size:9px;color:var(--muted);margin-top:1px;font-style:italic;}
+  .k-red{border-top-color:var(--red)!important;} .k-red .kpi-val{color:var(--red);}
+  .k-orange{border-top-color:var(--orange)!important;} .k-orange .kpi-val{color:var(--orange);}
+  .k-purple{border-top-color:var(--purple)!important;} .k-purple .kpi-val{color:var(--purple);}
+  .k-cyan{border-top-color:#79c0ff!important;} .k-cyan .kpi-val{color:#79c0ff;}
+
+  /* cards par catégorie */
+  .cat-cards{display:flex;flex-wrap:wrap;gap:8px;}
+  .cat-card{flex:1;min-width:150px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:6px;}
+  .cat-card:hover{background:#1a2a3a;}
+  .cat-card-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+  .cat-card-n{font-size:24px;font-weight:700;}
+  .cat-card-pct{font-size:13px;color:var(--muted);}
+  .cat-card-label{font-size:11px;color:var(--text);}
+  .cat-card-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);}
+  .cat-card-bar-fill{height:100%;border-radius:2px;}
+
+  /* cards top sources */
+  .src-cards{display:flex;flex-wrap:wrap;gap:8px;}
+  .src-card{flex:1;min-width:150px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;}
+  .src-card-top{display:flex;align-items:baseline;justify-content:space-between;}
+  .src-card-n{font-size:24px;font-weight:700;color:var(--red);}
+  .src-card-name{font-size:11px;color:#58a6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .src-card-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);}
+  .src-card-bar-fill{height:100%;border-radius:2px;background:var(--red);}
+
+  /* lignes de liste synthèse */
+  .sum-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;cursor:pointer;padding:2px 0;}
+  .sum-row:hover .sum-label{opacity:.85;}
+  .sum-label{width:175px;min-width:175px;font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;}
+  .sum-track{flex:1;height:9px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+  .sum-fill{display:block;height:100%;border-radius:3px;transition:width .3s;}
+  .sum-cnt{font-size:13px;font-weight:700;color:var(--text);width:44px;text-align:right;flex-shrink:0;}
+  .sum-pct{font-size:11px;color:var(--muted);width:34px;text-align:right;flex-shrink:0;}
+
+  /* conservés pour onglet liste détail */
+  .src-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .src-bar-name{width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#58a6ff;flex-shrink:0;}
+  .src-bar-track{flex:1;height:11px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden;}
+  .src-bar-fill{height:100%;border-radius:4px;}
+  .src-bar-cnt{font-size:13px;font-weight:600;color:var(--text);width:70px;text-align:right;flex-shrink:0;}
+  .src-bar-pct{font-size:12px;color:var(--muted);margin-left:4px;}
+
+  /* anciens stat-card (compatibilité) */
+  .stat-grid{display:none;}
+  .c-red .sc-val{color:var(--red);} .c-orange .sc-val{color:var(--orange);}
+  .c-blue .sc-val{color:#e8dcc8;} .c-purple .sc-val{color:var(--purple);}
+  .c-green .sc-val{color:var(--green);} .c-cyan .sc-val{color:#79c0ff;}
+
+  /* error mini-table */
+  .err-mt{width:100%;border-collapse:collapse;font-size:15px;}
+  .err-mt th{background:var(--surface);padding:6px 12px;text-align:left;color:var(--muted);position:sticky;top:0;border-bottom:1px solid var(--border);font-size:13px;}
+  .err-mt td{padding:6px 12px;border-bottom:1px solid #1e2328;vertical-align:top;}
+  .err-mt tr:hover td{background:var(--surface2);}
+  .err-mt td.ets{color:var(--muted);white-space:nowrap;font-size:14px;font-family:'Consolas','Courier New',monospace;}
+  .err-mt td.esrc{color:#58a6ff;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis;}
+  .err-mt td.emsg{word-break:break-word;max-width:55vw;font-family:'Consolas','Courier New',monospace;font-size:14px;}
+  .cat-pill{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;}
+
+  #ap-hist-canvas{display:block;border-radius:4px;background:#080e1a;}
+  #ap-hist-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:10px;color:var(--muted);}
+  .leg-item{display:inline-flex;align-items:center;gap:4px;}
+  .leg-dot{display:inline-block;width:10px;height:10px;border-radius:2px;}
+
+  /* ── Curseur temporel ── */
+  #swim-area{flex:0 0 auto;display:flex;flex-direction:column;position:relative;overflow:visible;}
+  #tl-cursor{position:absolute;top:0;bottom:0;width:10px;transform:translateX(-50%);background:linear-gradient(to right,transparent 4px,rgba(245,190,30,.9) 4px 6px,transparent 6px);pointer-events:auto;cursor:ew-resize;display:none;z-index:7;}
+  #tl-cursor::before{content:attr(data-time);position:absolute;bottom:4px;left:8px;background:rgba(8,14,26,.92);color:#f5be1e;font-family:'Consolas','Courier New',monospace;font-size:10px;padding:2px 5px;border-radius:3px;white-space:nowrap;border:1px solid rgba(245,190,30,.35);pointer-events:none;}
+  #swim-cursor{position:absolute;width:10px;transform:translateX(-50%);background:linear-gradient(to right,transparent 4px,rgba(245,190,30,.9) 4px 6px,transparent 6px);pointer-events:auto;cursor:ew-resize;display:none;z-index:7;}
+  #swim-cursor::before{content:attr(data-time);position:absolute;top:6px;left:8px;background:rgba(8,14,26,.92);color:#f5be1e;font-family:'Consolas','Courier New',monospace;font-size:10px;padding:2px 5px;border-radius:3px;white-space:nowrap;border:1px solid rgba(245,190,30,.35);pointer-events:none;}
+</style>
+</head>
+<body>
+
+<div id="body-top">
+<header>
+  <h1>&#9655; <span class="h1-text">STOD Log Analyzer</span></h1>
+  <span class="badge" id="badge-files">0 fichiers</span>
+  <span class="badge" id="badge-lines">0 lignes</span>
+  <span class="badge" id="badge-range">—</span>
+  <span id="copyright-btn" onclick="document.getElementById('copyright-modal').classList.add('open')">© 2026 M6 Groupe</span>
+</header>
+
+<div id="spinner-overlay">
+  <div style="position:relative;width:240px;height:240px;">
+    <div id="spinner-ring" style="position:absolute;inset:0;"></div>
+    <img src="inputs/Just_STOD.jpg" style="position:absolute;inset:14px;width:212px;height:212px;border-radius:50%;object-fit:cover;">
+  </div>
+  <div id="spinner-label">Chargement…</div>
+  <div id="spinner-progress">
+    <div id="spinner-prog-track"><div id="spinner-prog-fill"></div></div>
+    <div id="spinner-prog-counter"></div>
+  </div>
+</div>
+
+<div id="copyright-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div id="copyright-box">
+    <img class="cp-logo" src="inputs/M6 Groupe.png" alt="M6 Groupe">
+    <h2>À propos</h2>
+    <p>D'après une idée originale de<br><strong>Fabrice TAUZIES</strong><br><span style="font-size:11px;color:var(--muted);">Directeur Ingénierie / Support des infrastructures Broadcast</span></p>
+    <p>développé par<br><strong>Claude Code</strong></p>
+    <p class="cp-muted">© 2026 — M6 Groupe<br>Tous droits réservés</p>
+    <button id="copyright-close" onclick="document.getElementById('copyright-modal').classList.remove('open')">Fermer</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <!-- ── File input via <label> : méthode la plus fiable cross-browser ── -->
+  <div style="display:inline-flex;align-items:center;gap:4px;">
+    <label for="file-input" class="drop-label" id="drop-label">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 1v9M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="#58a6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Charger les fichiers logs
+    </label>
+    <input type="file" id="file-input" accept=".txt,.log" multiple style="display:none;">
+    <label for="file-add" class="drop-label" id="drop-label-add" style="border-color:#1e4a30;color:#3fb06a;display:none;">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2v12M2 8h12" stroke="#3fb06a" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Ajouter des fichiers
+    </label>
+    <input type="file" id="file-add" accept=".txt,.log" multiple style="display:none;">
+    <button class="btn" onclick="clearLogs()" title="Vider les logs" style="background:transparent;border:none;display:inline-flex;align-items:center;padding:3px 4px;">
+      <img src="inputs/poubelle.png" width="24" height="24" alt="Vider les logs">
+    </button>
+  </div>
+  <span id="load-counter" style="font-family:'Consolas','Courier New',monospace;font-size:11px;color:var(--muted);min-width:90px;display:inline-block;visibility:hidden;"></span>
+
+  <div class="vsep"></div>
+
+  <div class="ctrl">
+    <label class="lbl">&#128197; Date UTC</label>
+    <input type="date" id="zoom-date" value="2026-07-05">
+  </div>
+  <div class="ctrl">
+    <label class="lbl">&#128336; Heure UTC <span style="color:var(--muted);font-weight:400">(optionnel)</span></label>
+    <input type="time" id="zoom-time" step="1" placeholder="--:--:--">
+  </div>
+  <div class="ctrl">
+    <label class="lbl">&#177; Fenêtre (s)</label>
+    <input type="number" id="zoom-win" value="120" min="5" max="86400">
+  </div>
+  <button class="btn" onclick="applyZoom()" style="display:inline-flex;align-items:center;gap:5px;"><img src="inputs/zoom.png" style="height:16px;width:16px;object-fit:contain;"> Zoomer</button>
+  <button class="btn sec" onclick="zoomFullDay()" style="display:inline-flex;align-items:center;gap:5px;"><img src="inputs/calendrier.png" style="height:16px;width:16px;object-fit:contain;"> Jour entier</button>
+  <button class="btn sec" onclick="resetZoom()" style="display:inline-flex;align-items:center;gap:5px;"><img src="inputs/tout.png" style="height:16px;width:16px;object-fit:contain;"> Tout afficher</button>
+
+  <div class="vsep"></div>
+  <div class="ctrl">
+    <label class="lbl">&#128269; Recherche</label>
+    <div style="position:relative;display:inline-flex;align-items:center;">
+      <input type="text" id="search-txt" placeholder="mot-clé, ID, IP…" oninput="applyFilters();document.getElementById('search-clear').style.visibility=this.value?'visible':'hidden';" style="padding-right:20px;">
+      <span id="search-clear" onclick="document.getElementById('search-txt').value='';applyFilters();this.style.visibility='hidden';" style="position:absolute;right:5px;cursor:pointer;color:var(--muted);font-size:13px;line-height:1;visibility:hidden;" title="Effacer">&#x2715;</span>
+    </div>
+  </div>
+
+  <div style="margin-left:auto;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+    <label class="lbl" style="margin:0;">Niveaux :</label>
+    <button class="btn sec" style="padding:2px 8px;font-size:10px;background:transparent;color:var(--text);border:1px solid var(--border);" onclick="selectAllLevels(true)">Tout</button>
+    <button class="btn sec" style="padding:2px 8px;font-size:10px;background:transparent;color:var(--text);border:1px solid var(--border);" onclick="selectAllLevels(false)">Aucun</button>
+    <span class="chip EXE active"     data-level="EXE"     onclick="toggleLevel(this)">EXE</span>
+    <span class="chip DEBUG active"   data-level="DEBUG"   onclick="toggleLevel(this)">DEBUG</span>
+    <span class="chip RECVD active"   data-level="RECVD"   onclick="toggleLevel(this)">RECVD</span>
+    <span class="chip SEND active"    data-level="SEND"    onclick="toggleLevel(this)">SEND</span>
+    <span class="chip ERROR active"   data-level="ERROR"   onclick="toggleLevel(this)">ERROR</span>
+    <span class="chip WARNING active" data-level="WARNING" onclick="toggleLevel(this)">WARNING</span>
+    <span class="chip EXCPT active"   data-level="EXCPT"   onclick="toggleLevel(this)">EXCPT</span>
+  </div>
+</div>
+
+<div id="progress-bar"><div id="progress-fill"></div></div>
+
+<div class="filter-row">
+  <label class="lbl">Sources :</label>
+  <button class="btn sec" style="padding:2px 8px;font-size:10px;background:transparent;color:var(--text);border:1px solid var(--border);" onclick="selectAllSources(true)">Tout</button>
+  <button class="btn sec" style="padding:2px 8px;font-size:10px;background:transparent;color:var(--text);border:1px solid var(--border);" onclick="selectAllSources(false)">Aucun</button>
+  <div id="src-chips" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+</div>
+
+</div><!-- /body-top -->
+<div id="body-main">
+<div id="status-bar">
+  <span>Affichés : <b id="s-shown">0</b></span>
+  <span>Total : <b id="s-total">0</b></span>
+  <span>Fenêtre : <b id="s-win">—</b></span>
+  <span>Erreurs : <b id="s-errors">0</b></span>
+</div>
+
+<div class="main">
+
+  <div id="swim-area">
+    <div id="tl-container">
+      <div id="tl-header">
+        <span id="tl-left">—</span>
+        <span style="color:#e8dcc8;font-weight:700;font-size:11px">TIMELINE UTC</span>
+        <span id="tl-right">—</span>
+      </div>
+      <div id="canvas-wrap">
+        <canvas id="tl-canvas" height="58"></canvas>
+        <div id="zoom-rect"></div>
+        <div id="drag-rect"></div>
+        <div id="tl-cursor"></div>
+      </div>
+    </div>
+
+    <div id="swim-header"><span>TIMELINES SOURCES</span></div>
+    <div id="swimlanes"></div>
+    <div id="swim-resize" title="Redimensionner les sources"></div>
+    <div id="swim-cursor"></div>
+  </div>
+
+  <div id="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Horodatage UTC</th>
+          <th>Source / Driver</th>
+          <th>Niveau</th>
+          <th>Message</th>
+        </tr>
+      </thead>
+      <tbody id="t-body">
+        <tr><td colspan="4" class="no-data">Chargez des fichiers de logs pour commencer.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- .main -->
+</div><!-- /body-main -->
+
+<!-- ── Resize handle ───────────────────────────────────── -->
+<div class="resize-h" id="resize-handle" title="Redimensionner"></div>
+
+<!-- ── Analysis Panel ────────────────────────────────────── -->
+<div id="analysis-panel">
+  <div id="ap-header">
+    <span class="ap-tab active" data-tab="summary"  onclick="apTab(this)">Synthèse</span>
+    <span class="ap-tab"        data-tab="histogram" onclick="apTab(this)">Histogramme</span>
+    <span class="ap-tab"        data-tab="list"      onclick="apTab(this)">Détail erreurs</span>
+    <span id="ap-scope">fenêtre active</span>
+  </div>
+  <div id="ap-body">
+    <div id="ap-tab-summary"></div>
+    <div id="ap-tab-histogram" style="display:none">
+      <canvas id="ap-hist-canvas" height="140"></canvas>
+      <div id="ap-hist-legend"></div>
+    </div>
+    <div id="ap-tab-list" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── State ────────────────────────────────────────────────────────────────────
+let allEvents     = [];   // {tsMs, ts:Date, source, level, msg}
+let filteredEvts  = [];
+let allSources    = [];   // ordered list
+let sourceSet     = new Set();
+let zoomStart     = null;
+let zoomEnd       = null;
+let activeLevels  = new Set(['EXE','DEBUG','RECVD','SEND','ERROR','WARNING','EXCPT']);
+let activeSrcs    = new Set();
+
+
+// ── Spinner ───────────────────────────────────────────────────────────────────
+function showSpinner(label, withProgress) {
+  document.getElementById('spinner-label').textContent = label || 'Chargement…';
+  const prog = document.getElementById('spinner-progress');
+  if (withProgress) {
+    prog.classList.add('on');
+    document.getElementById('spinner-prog-fill').style.width = '0%';
+    document.getElementById('spinner-prog-counter').textContent = '';
+  } else {
+    prog.classList.remove('on');
+  }
+  document.getElementById('spinner-overlay').classList.add('on');
+}
+function updateSpinnerProgress(done, total) {
+  document.getElementById('spinner-prog-fill').style.width = (done / total * 100) + '%';
+  document.getElementById('spinner-prog-counter').textContent = done + ' / ' + total;
+}
+function hideSpinner() {
+  document.getElementById('spinner-overlay').classList.remove('on');
+  document.getElementById('spinner-progress').classList.remove('on');
+}
+
+// ── File input ────────────────────────────────────────────────────────────────
+const fileInput    = document.getElementById('file-input');
+const fileAdd      = document.getElementById('file-add');
+const dropLabel    = document.getElementById('drop-label');
+const dropLabelAdd = document.getElementById('drop-label-add');
+
+function syncFileButtons() {
+  const hasLogs = allEvents.length > 0;
+  dropLabel.style.display    = hasLogs ? 'none'         : 'inline-flex';
+  dropLabelAdd.style.display = hasLogs ? 'inline-flex'  : 'none';
+}
+
+fileInput.addEventListener('change', function() {
+  if (this.files && this.files.length) loadFiles(this.files);
+  this.value = '';
+});
+
+fileAdd.addEventListener('change', function() {
+  if (this.files && this.files.length) addFiles(this.files);
+  this.value = '';
+});
+
+dropLabel.addEventListener('dragover',  e => { e.preventDefault(); dropLabel.classList.add('over'); });
+dropLabel.addEventListener('dragleave', () => dropLabel.classList.remove('over'));
+dropLabel.addEventListener('drop', e => {
+  e.preventDefault();
+  dropLabel.classList.remove('over');
+  if (e.dataTransfer.files.length) loadFiles(e.dataTransfer.files);
+});
+
+dropLabelAdd.addEventListener('dragover',  e => { e.preventDefault(); dropLabelAdd.classList.add('over'); });
+dropLabelAdd.addEventListener('dragleave', () => dropLabelAdd.classList.remove('over'));
+dropLabelAdd.addEventListener('drop', e => {
+  e.preventDefault();
+  dropLabelAdd.classList.remove('over');
+  if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+});
+
+// ── Loading ──────────────────────────────────────────────────────────────────
+function loadFiles(fileList) {
+  const files = Array.from(fileList).filter(f =>
+    /\.(txt|log)$/i.test(f.name)
+  );
+  if (!files.length) { alert('Aucun fichier .txt ou .log sélectionné.'); return; }
+
+  showSpinner('Lecture des fichiers…', true);
+
+  // Reset state
+  allEvents  = [];
+  sourceSet  = new Set();
+  allSources = [];
+
+  const total = files.length;
+  let done = 0;
+  let errors = 0;
+
+  const bar  = document.getElementById('progress-bar');
+  const fill = document.getElementById('progress-fill');
+  const counter = document.getElementById('load-counter');
+  bar.style.visibility  = 'visible';
+  fill.style.width   = '0%';
+  counter.textContent = `0 / ${total}`;
+  counter.style.visibility = 'visible';
+
+  function onFileDone() {
+    done++;
+    fill.style.width = (done / total * 100) + '%';
+    counter.textContent = `${done} / ${total}`;
+    updateSpinnerProgress(done, total);
+    if (done === total) finalize(errors);
+  }
+
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload  = ev => { parseFile(file.name, ev.target.result); onFileDone(); };
+    reader.onerror = ()  => { errors++; onFileDone(); };
+    reader.readAsText(file, 'windows-1252');
+  });
+}
+
+// ── Ajout de fichiers sans réinitialiser ──────────────────────────────────────
+const ADD_MAX_GAP_MS = 7 * 24 * 3600 * 1000; // 7 jours
+
+function addFiles(fileList) {
+  const files = Array.from(fileList).filter(f => /\.(txt|log)$/i.test(f.name));
+  if (!files.length) { alert('Aucun fichier .txt ou .log sélectionné.'); return; }
+  showSpinner('Lecture des fichiers…', true);
+
+  const total = files.length;
+  let done = 0, errors = 0;
+
+  const bar  = document.getElementById('progress-bar');
+  const fill = document.getElementById('progress-fill');
+  const counter = document.getElementById('load-counter');
+  bar.style.visibility = 'visible';
+  fill.style.width  = '0%';
+  counter.textContent = `0 / ${total}`;
+  counter.style.visibility = 'visible';
+
+  // Parser dans un tableau temporaire pour pouvoir valider avant fusion
+  const newEvents  = [];
+  const savedAll   = allEvents;
+  const savedSet   = sourceSet;
+  allEvents  = newEvents;
+  sourceSet  = new Set();
+
+  function onDone() {
+    done++;
+    fill.style.width = (done / total * 100) + '%';
+    counter.textContent = `${done} / ${total}`;
+    updateSpinnerProgress(done, total);
+    if (done < total) return;
+
+    // Restaurer allEvents avant toute décision
+    allEvents = savedAll;
+    sourceSet = savedSet;
+
+    bar.style.visibility = 'hidden';
+    counter.style.visibility = 'hidden';
+    hideSpinner();
+
+    if (!newEvents.length) return;
+
+    newEvents.sort((a, b) => a.tsMs - b.tsMs);
+    const newMin = newEvents[0].tsMs;
+    const newMax = newEvents[newEvents.length - 1].tsMs;
+
+    // Vérification de compatibilité si des logs sont déjà présents
+    if (allEvents.length) {
+      const curMin = allEvents[0].tsMs;
+      const curMax = allEvents[allEvents.length - 1].tsMs;
+      // écart entre les deux plages (0 si elles se chevauchent)
+      const gap = Math.max(0, Math.max(newMin - curMax, curMin - newMax));
+      if (gap > ADD_MAX_GAP_MS) {
+        const fmt = ms => fmtDate(ms) + ' ' + fmtHMS(ms);
+        alert(
+          'Les fichiers ajoutés ne correspondent pas aux dates des logs présents.\n\n' +
+          'Logs présents  : ' + fmt(curMin) + ' → ' + fmt(curMax) + '\n' +
+          'Fichiers ajoutés : ' + fmt(newMin) + ' → ' + fmt(newMax) + '\n\n' +
+          'Écart : ' + Math.round(gap / 86400000) + ' jour(s). Maximum autorisé : 7 jours.\n\n' +
+          'Les fichiers ajoutés ont été ignorés.'
+        );
+        return;
+      }
+    }
+
+    // Fusion
+    for (const ev of newEvents) allEvents.push(ev);
+    allEvents.sort((a, b) => a.tsMs - b.tsMs);
+    sourceSet = new Set(allEvents.map(e => e.source));
+    allSources = [...sourceSet].sort();
+    activeSrcs = new Set(allSources);
+    buildSourceChips();
+    updateBadges();
+    if (errors) console.warn(errors + ' fichier(s) en erreur.');
+    resetZoom();
+    syncFileButtons();
+  }
+
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload  = ev => { parseFile(file.name, ev.target.result); onDone(); };
+    reader.onerror = ()  => { errors++; onDone(); };
+    reader.readAsText(file, 'windows-1252');
+  });
+}
+
+// ── Parse a single file ───────────────────────────────────────────────────────
+function dateFromName(name) {
+  const m = name.match(/(\d{8})/);
+  if (!m) return null;
+  const s = m[1];
+  return Date.UTC(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8));
+}
+
+function sourceFromName(name) {
+  return name
+    .replace(/\.txt$|\.log$/i, '')
+    .replace(/^\d{8}_?/, '')
+    .replace(/_SEC\d+$/i, '')
+    .replace(/_Log$/i, '')
+    .replace(/_/g, ' ')
+    .trim();
+}
+
+const LINE_RE  = /^(\d{2}):(\d{2}):(\d{2}):(\d{3})\t\[([A-Z]+)\]\t(.*)/;
+const LINE_RE2 = /^(\d{2}):(\d{2}):(\d{2}):(\d{3})\s+\[([A-Z]+)\]\s+(.*)/;
+const XP_RE    = /^(\d{2})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})\.(\d{3}): (.*)/;
+const HARM_RE  = /^(\d{2})\/(\d{2}) (\d{2}):(\d{2}):(\d{2}) ([DIWEC]) (\S+)\s+(.*)/;
+const HARM_HDR = /^Log started (\d+)\/(\d+)\/(\d{4})/;
+const DIR_RE   = /^(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}):(\d{2}) (\d{1,3})ms\t([^\t]*)\t[^\t]*\t[^\t]*\t(.*)/;
+
+function xpLevel(msg) {
+  if (/Scene Online\s*>>>/i.test(msg))  return 'SEND';
+  if (/Scene Offline\s*<<</i.test(msg)) return 'RECVD';
+  if (/^API:/i.test(msg))               return 'DEBUG';
+  if (/Total Memory/i.test(msg))        return 'EXE';
+  if (/error|fail|exception/i.test(msg)) return 'ERROR';
+  if (/warn/i.test(msg))                return 'WARNING';
+  return 'EXE';
+}
+
+const HARM_LEVEL = { D:'DEBUG', I:'EXE', W:'WARNING', E:'ERROR', C:'ERROR' };
+
+// Asteroid : 2026-07-20T01:15:14.924123+02:00 magnum-r asteroid: LEVEL:module:msg
+const ISO_TS_RE = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+(?:[+-]\d{2}:\d{2}|Z))\s+\S+\s+(\S+?)(?:\[\d+\])?:\s+(.*)$/;
+const ISO_PY_LVL  = { DEBUG:'DEBUG', INFO:'EXE', WARNING:'WARNING', ERROR:'ERROR', CRITICAL:'ERROR' };
+const ISO_STN_LVL = { '3':'ERROR', '4':'WARNING', '5':'EXE', '6':'EXE', '7':'DEBUG' };
+
+function isoMsgLevel(msg) {
+  const py = /^(DEBUG|INFO|WARNING|ERROR|CRITICAL):/.exec(msg);
+  if (py) return { level: ISO_PY_LVL[py[1]], msg: msg.slice(py[1].length + 1).replace(/^\S+:/, '').trim() };
+  const st = /^LOG(\d)\[.*?\]:\s*(.*)$/.exec(msg);
+  if (st) return { level: ISO_STN_LVL[st[1]] || 'EXE', msg: st[2] };
+  const br = /^\S+\[(INFO|WARNING|ERROR|DEBUG)\]:\s*(.*)$/.exec(msg);
+  if (br) return { level: ISO_PY_LVL[br[1]], msg: br[2] };
+  return { level: 'EXE', msg };
+}
+
+function parseHarmonic(filename, content) {
+  // nom machine depuis le nom de fichier : syslog_D12_04232_... → "Harmonic D12-04232"
+  const nm = filename.match(/syslog_([^_]+_[^_]+)_/i);
+  const machineName = nm ? 'Harmonic ' + nm[1].replace(/_/g,'-') : 'Harmonic';
+
+  // année depuis le nom de fichier : syslog_D12_04232_YYYY_MM_DD_...
+  const yearM = filename.match(/syslog_[^_]+_[^_]+_(\d{4})/i);
+  let fileYear = yearM ? +yearM[1] : new Date().getUTCFullYear();
+
+  // fallback : chercher l'année dans le header "Log started M/D/YYYY"
+  const lines = content.split(/\r?\n/);
+  for (const line of lines) {
+    const h = HARM_HDR.exec(line);
+    if (h) { fileYear = +h[3]; break; }
+  }
+
+  sourceSet.add(machineName);
+  for (const line of lines) {
+    const m = HARM_RE.exec(line);
+    if (!m) continue;
+    // m[1]=MM m[2]=DD m[3]=HH m[4]=MI m[5]=SS m[6]=level m[7]=thread m[8]=msg
+    const tsMs = Date.UTC(fileYear, +m[1]-1, +m[2], +m[3], +m[4], +m[5]);
+    allEvents.push({ tsMs, source: machineName, level: HARM_LEVEL[m[6]] || 'EXE', msg: '[' + m[7] + '] ' + m[8] });
+  }
+}
+
+function parseMagnumStyle(content) {
+  for (const line of content.split(/\r?\n/)) {
+    const m = ISO_TS_RE.exec(line);
+    if (!m) continue;
+    const tsMs = new Date(m[1]).getTime();
+    if (isNaN(tsMs)) continue;
+    const source = m[2];
+    const { level, msg } = isoMsgLevel(m[3]);
+    sourceSet.add(source);
+    allEvents.push({ tsMs, source, level, msg });
+  }
+}
+
+function parseXPression(filename, content) {
+  const source = filename
+    .replace(/\.log$/i, '')
+    .replace(/-\d{2}-\d{2}-\d{4}$/, '')
+    .trim();
+  sourceSet.add(source);
+
+  const lines = content.split(/\r?\n/);
+  for (const line of lines) {
+    if (!line || line.startsWith('***')) continue;
+    const m = XP_RE.exec(line);
+    if (!m) continue;
+    // m[1]=DD m[2]=MM m[3]=YY(2digit) m[4]=HH m[5]=MI m[6]=SS m[7]=ms m[8]=msg
+    const tsMs = Date.UTC(2000 + (+m[3]), +m[2]-1, +m[1], +m[4], +m[5], +m[6], +m[7]);
+    allEvents.push({ tsMs, source, level: xpLevel(m[8]), msg: m[8] });
+  }
+}
+
+// Mapping Director level → niveau interne
+const DIR_LEVEL = {
+  'Event': 'EXE',
+  'SYSINFO': 'DEBUG',
+  'Alarm Manager': 'WARNING',
+  'ConfigAutoSave': 'EXE',
+  'Online Configuration Manager': 'DEBUG',
+};
+
+function parseDirector(filename, content) {
+  // Source = nom du fichier sans extension
+  const source = filename.replace(/\.log$/i, '').trim();
+  sourceSet.add(source);
+
+  for (const line of content.split(/\r?\n/)) {
+    const m = DIR_RE.exec(line);
+    if (!m) continue;
+    // m[1]=DD m[2]=MM m[3]=YYYY m[4]=HH m[5]=MI m[6]=SS m[7]=ms m[8]=level m[9]=msg
+    const tsMs = Date.UTC(+m[3], +m[2]-1, +m[1], +m[4], +m[5], +m[6], +m[7]);
+    const level = DIR_LEVEL[m[8].trim()] || 'EXE';
+    allEvents.push({ tsMs, source, level, msg: '[' + m[8].trim() + '] ' + m[9].trim() });
+  }
+}
+
+function parseFile(filename, content) {
+  if (/XPression/i.test(filename)) {
+    parseXPression(filename, content);
+    return;
+  }
+  if (/syslog/i.test(filename) || /harmonic/i.test(filename)) {
+    parseHarmonic(filename, content);
+    return;
+  }
+  // Détection automatique du format ISO timestamp (Magnum / Asteroid)
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d/.test(content.trimStart())) {
+    parseMagnumStyle(content);
+    return;
+  }
+  // Détection format Director (DD.MM.YYYY HH:MM:SS mmmms\tLevel\t...\tmsg)
+  if (/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2} \d+ms\t/.test(content.trimStart())) {
+    parseDirector(filename, content);
+    return;
+  }
+
+  const baseMs = dateFromName(filename);
+  if (baseMs === null) return;
+  const source = sourceFromName(filename);
+  sourceSet.add(source);
+
+  const lines = content.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line) continue;
+    let m = LINE_RE.exec(line) || LINE_RE2.exec(line);
+    if (!m) continue;
+    const tsMs = baseMs
+      + (+m[1]) * 3600000
+      + (+m[2]) * 60000
+      + (+m[3]) * 1000
+      + (+m[4]);
+    allEvents.push({ tsMs, source, level: m[5], msg: m[6] });
+  }
+}
+
+// ── Finalize after all files loaded ──────────────────────────────────────────
+function finalize(errCount) {
+  allEvents.sort((a, b) => a.tsMs - b.tsMs);
+
+  allSources = [...sourceSet].sort();
+  activeSrcs = new Set(allSources);
+
+  buildSourceChips();
+  updateBadges();
+
+  const bar = document.getElementById('progress-bar');
+  bar.style.visibility = 'hidden';
+  document.getElementById('load-counter').style.visibility = 'hidden';
+
+  if (errCount) console.warn(errCount + ' fichier(s) en erreur de lecture.');
+
+  resetZoom();
+  syncFileButtons();
+  hideSpinner();
+}
+
+function clearLogs() {
+  allEvents  = [];
+  filteredEvts = [];
+  allSources = [];
+  sourceSet  = new Set();
+  activeSrcs = new Set();
+  zoomStart  = null;
+  zoomEnd    = null;
+  buildSourceChips();
+  updateBadges();
+  drawTimeline();
+  drawSwimLanes();
+  renderTable();
+  renderAnalysis();
+  document.getElementById('badge-range').textContent = '—';
+  syncFileButtons();
+}
+
+// ── Source chips ──────────────────────────────────────────────────────────────
+function buildSourceChips() {
+  const container = document.getElementById('src-chips');
+  container.innerHTML = '';
+  allSources.forEach(src => {
+    const el = document.createElement('span');
+    el.className = 'chip active';
+    el.textContent = src;
+    el.title = src;
+    el.style.cssText = 'max-width:180px;overflow:hidden;text-overflow:ellipsis;';
+    el.onclick = function() {
+      this.classList.toggle('active');
+      activeSrcs[this.classList.contains('active') ? 'add' : 'delete'](src);
+      applyFilters();
+    };
+    container.appendChild(el);
+  });
+}
+
+function updateSourceChipAlerts() {
+  const errCount = {};
+  for (const e of filteredEvts) {
+    if (e.level === 'ERROR') errCount[e.source] = (errCount[e.source] || 0) + 1;
+  }
+  const sorted = Object.values(errCount).sort((a, b) => b - a);
+  const threshold = sorted.length >= 2 ? sorted[1] : sorted[0] || 0;
+  document.querySelectorAll('#src-chips .chip').forEach(el => {
+    const src = el.textContent.trim();
+    const isAlert = threshold > 0 && (errCount[src] || 0) >= threshold;
+    el.classList.toggle('chip-alert', isAlert);
+  });
+}
+
+function selectAllSources(on) {
+  document.querySelectorAll('#src-chips .chip').forEach(el => {
+    el.classList.toggle('active', on);
+  });
+  activeSrcs = on ? new Set(allSources) : new Set();
+  applyFilters();
+}
+
+function toggleLevel(el) {
+  el.classList.toggle('active');
+  const lvl = el.dataset.level;
+  activeLevels[el.classList.contains('active') ? 'add' : 'delete'](lvl);
+  applyFilters();
+}
+
+function selectAllLevels(on) {
+  document.querySelectorAll('.chip[data-level]').forEach(el => {
+    el.classList.toggle('active', on);
+    activeLevels[on ? 'add' : 'delete'](el.dataset.level);
+  });
+  applyFilters();
+}
+
+// ── Zoom ──────────────────────────────────────────────────────────────────────
+function applyZoom() {
+  const date = document.getElementById('zoom-date').value;
+  const time = document.getElementById('zoom-time').value;
+  if (!date) return;
+  if (!time) { zoomFullDay(); return; }
+  const winS = Math.max(5, parseInt(document.getElementById('zoom-win').value) || 120);
+  const center = new Date(date + 'T' + time + 'Z').getTime();
+  if (isNaN(center)) return;
+  zoomStart = center - winS * 1000;
+  zoomEnd   = center + winS * 1000;
+  applyFilters();
+}
+
+function zoomFullDay() {
+  const date = document.getElementById('zoom-date').value;
+  if (!date) return;
+  zoomStart = new Date(date + 'T00:00:00Z').getTime();
+  zoomEnd   = zoomStart + 86400000;
+  applyFilters();
+}
+
+function resetZoom() {
+  zoomStart = null; zoomEnd = null;
+  applyFilters();
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+function applyFilters() {
+  showSpinner('Filtrage…');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const q = document.getElementById('search-txt').value.toLowerCase();
+    filteredEvts = allEvents.filter(e => {
+      if (!activeLevels.has(e.level))  return false;
+      if (!activeSrcs.has(e.source))   return false;
+      if (zoomStart !== null && (e.tsMs < zoomStart || e.tsMs > zoomEnd)) return false;
+      if (q && !e.msg.toLowerCase().includes(q) && !e.source.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    updateStatus();
+    drawTimeline();
+    drawSwimLanes();
+    renderTable();
+    renderAnalysis();
+    updateSourceChipAlerts();
+    if (filteredEvts.length) {
+      cursorDragging = true;
+      requestAnimationFrame(() => {
+        placeCursors(filteredEvts[0].tsMs);
+        cursorDragging = false;
+      });
+    } else { document.getElementById('tl-cursor').style.display='none'; document.getElementById('swim-cursor').style.display='none'; }
+    hideSpinner();
+  }));
+}
+
+// ── Status ────────────────────────────────────────────────────────────────────
+function updateBadges() {
+  document.getElementById('badge-files').textContent = allSources.length + ' fichiers';
+  document.getElementById('badge-lines').textContent = allEvents.length.toLocaleString('fr') + ' lignes';
+  if (allEvents.length) {
+    const a = fmtDate(allEvents[0].tsMs);
+    const b = fmtDate(allEvents[allEvents.length-1].tsMs);
+    const tA = fmtHMS(allEvents[0].tsMs);
+    const tB = fmtHMS(allEvents[allEvents.length-1].tsMs);
+    document.getElementById('badge-range').textContent = a === b
+      ? a + '  ' + tA + ' → ' + tB
+      : a + ' ' + tA + '  →  ' + b + ' ' + tB;
+  }
+}
+
+function updateStatus() {
+  document.getElementById('s-shown').textContent  = filteredEvts.length.toLocaleString('fr');
+  document.getElementById('s-total').textContent  = allEvents.length.toLocaleString('fr');
+  document.getElementById('s-errors').textContent = filteredEvts.filter(e => e.level === 'ERROR').length;
+  if (zoomStart !== null) {
+    document.getElementById('s-win').textContent = fmtFull(zoomStart) + ' → ' + fmtFull(zoomEnd);
+  } else {
+    document.getElementById('s-win').textContent = 'Global';
+  }
+}
+
+// ── Timeline canvas ───────────────────────────────────────────────────────────
+function drawTimeline() {
+  const canvas = document.getElementById('tl-canvas');
+  const wrap   = document.getElementById('canvas-wrap');
+  const W = wrap.clientWidth || window.innerWidth - 40;
+  const H = 84;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#0a1a2e';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!allEvents.length) return;
+
+  // Axe temporel toujours sur la plage globale
+  const gMin = allEvents[0].tsMs;
+  const gMax = allEvents[allEvents.length - 1].tsMs;
+  const span = gMax - gMin || 1;
+
+  // Hauteur depuis allEvents, erreurs en rouge depuis filteredEvts (= sources/niveaux actifs)
+  const BUCKETS = Math.max(1, Math.floor(W / 3));
+  const cnt  = new Float32Array(BUCKETS);
+  const ecnt = new Float32Array(BUCKETS);
+  for (const e of allEvents) {
+    const b = Math.min(BUCKETS - 1, ((e.tsMs - gMin) / span * BUCKETS) | 0);
+    cnt[b]++;
+  }
+  for (const e of allEvents) {
+    if (e.level !== 'ERROR') continue;
+    if (!activeSrcs.has(e.source)) continue;
+    const b = Math.min(BUCKETS - 1, ((e.tsMs - gMin) / span * BUCKETS) | 0);
+    ecnt[b]++;
+  }
+  let maxC = 1;
+  for (let i = 0; i < BUCKETS; i++) if (cnt[i] > maxC) maxC = cnt[i];
+
+  const bw = W / BUCKETS;
+  for (let i = 0; i < BUCKETS; i++) {
+    if (!cnt[i]) continue;
+    const x = i * bw;
+    const h = Math.max(2, (cnt[i] / maxC) * (H - 38));
+    ctx.fillStyle = ecnt[i] ? '#ef4444' : '#1e6090';
+    ctx.fillRect(x, H - h - 2, Math.max(1.5, bw - 0.5), h);
+  }
+
+  // Tick labels : heure ligne 1, date ligne 2 (affichée au premier tick et à chaque changement de jour)
+  ctx.textAlign = 'center';
+  const TICKS = 8;
+  let lastDateStr = null;
+  for (let i = 0; i <= TICKS; i++) {
+    const x = (i / TICKS) * W;
+    const t = gMin + (i / TICKS) * span;
+    const dStr = fmtDate(t);
+    ctx.fillStyle = '#1e3050';
+    ctx.fillRect(x, 0, 1, H);
+    ctx.font = '12px Consolas,monospace';
+    ctx.fillStyle = '#5a7a9a';
+    ctx.fillText(fmtHMS(t), x, 14);
+    if (dStr !== lastDateStr) {
+      ctx.font = '11px Consolas,monospace';
+      ctx.fillStyle = '#8eb8d8';
+      ctx.fillText(dStr, x, 28);
+      lastDateStr = dStr;
+    }
+  }
+
+  // Zoom rect overlay
+  const zr = document.getElementById('zoom-rect');
+  if (zoomStart !== null) {
+    const x1 = Math.max(0, (zoomStart - gMin) / span * W);
+    const x2 = Math.min(W, (zoomEnd   - gMin) / span * W);
+    zr.style.display = 'block';
+    zr.style.left    = x1 + 'px';
+    zr.style.width   = Math.max(4, x2 - x1) + 'px';
+  } else {
+    zr.style.display = 'none';
+  }
+
+  document.getElementById('tl-left').textContent  = fmtFull(gMin);
+  document.getElementById('tl-right').textContent = fmtFull(gMax);
+}
+
+// ── Drag de sélection sur la timeline globale ────────────────────────────────
+(function() {
+  const canvas   = document.getElementById('tl-canvas');
+  const dragRect = document.getElementById('drag-rect');
+  let dragging = false, dragX0 = 0;
+
+  canvas.addEventListener('mousedown', function(e) {
+    if (!allEvents.length) return;
+    // Retirer le focus des inputs pour que les flèches claviers fonctionnent
+    if (document.activeElement && document.activeElement !== document.body)
+      document.activeElement.blur();
+    dragging = true;
+    dragX0   = e.clientX - this.getBoundingClientRect().left;
+    dragRect.style.display = 'block';
+    dragRect.style.left    = dragX0 + 'px';
+    dragRect.style.width   = '0px';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const x1 = Math.max(0, Math.min(dragX0, e.clientX - rect.left));
+    const x2 = Math.min(rect.width, Math.max(dragX0, e.clientX - rect.left));
+    dragRect.style.left  = x1 + 'px';
+    dragRect.style.width = Math.max(1, x2 - x1) + 'px';
+  });
+
+  document.addEventListener('mouseup', function(e) {
+    if (!dragging) return;
+    dragging = false;
+    dragRect.style.display = 'none';
+    if (!allEvents.length) return;
+
+    const rect  = canvas.getBoundingClientRect();
+    const x1    = Math.max(0, Math.min(dragX0, e.clientX - rect.left));
+    const x2    = Math.min(rect.width, Math.max(dragX0, e.clientX - rect.left));
+
+    // Trop petit → simple clic, ignore
+    if (x2 - x1 < 4) return;
+
+    const gMin = allEvents[0].tsMs;
+    const gMax = allEvents[allEvents.length - 1].tsMs;
+    zoomStart  = gMin + (x1 / rect.width) * (gMax - gMin);
+    zoomEnd    = gMin + (x2 / rect.width) * (gMax - gMin);
+
+    const center = (zoomStart + zoomEnd) / 2;
+    const d = new Date(center);
+    document.getElementById('zoom-date').value = d.toISOString().slice(0, 10);
+    document.getElementById('zoom-time').value = d.toISOString().slice(11, 19);
+    document.getElementById('zoom-win').value  = Math.round((zoomEnd - zoomStart) / 2000);
+    applyFilters();
+  });
+})();
+
+// ── Déplacement au clavier (flèches) — appui continu via rAF ─────────────────
+let arrowKey     = null;   // 'ArrowLeft' | 'ArrowRight'
+let arrowShift   = false;
+let arrowRafId   = null;
+let arrowLast    = null;   // timestamp rAF précédent
+
+function arrowStep(ts) {
+  if (!arrowKey) return;
+  if (arrowLast === null) arrowLast = ts;
+  const elapsed = ts - arrowLast;
+  arrowLast = ts;
+
+  if (!allEvents.length) { arrowKey = null; return; }
+
+  if (zoomStart === null) {
+    const mid   = (allEvents[0].tsMs + allEvents[allEvents.length - 1].tsMs) / 2;
+    const winMs = Math.max(5, parseInt(document.getElementById('zoom-win').value) || 120) * 1000;
+    zoomStart = mid - winMs;
+    zoomEnd   = mid + winMs;
+  }
+
+  const winMs = zoomEnd - zoomStart;
+  const gMin  = allEvents[0].tsMs;
+  const gMax  = allEvents[allEvents.length - 1].tsMs;
+
+  // Vitesse : 20% de la fenêtre par seconde (×5 avec Shift)
+  const speed = winMs * (arrowShift ? 1.0 : 0.2);
+  const delta = (arrowKey === 'ArrowRight' ? 1 : -1) * speed * (elapsed / 1000);
+
+  zoomStart = Math.max(gMin, zoomStart + delta);
+  zoomEnd   = Math.min(gMax, zoomEnd   + delta);
+  if (zoomStart === gMin) zoomEnd   = gMin + winMs;
+  if (zoomEnd   === gMax) zoomStart = gMax - winMs;
+
+  const center = (zoomStart + zoomEnd) / 2;
+  const d = new Date(center);
+  document.getElementById('zoom-date').value = d.toISOString().slice(0, 10);
+  document.getElementById('zoom-time').value = d.toISOString().slice(11, 19);
+  applyFilters();
+
+  arrowRafId = requestAnimationFrame(arrowStep);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (!allEvents.length) return;
+  if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  e.preventDefault();
+  // Si touche déjà enfoncée (repeat), ne pas relancer une boucle
+  if (e.repeat) return;
+  arrowKey   = e.key;
+  arrowShift = e.shiftKey;
+  arrowLast  = null;
+  if (arrowRafId) cancelAnimationFrame(arrowRafId);
+  arrowRafId = requestAnimationFrame(arrowStep);
+});
+
+document.addEventListener('keyup', function(e) {
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    arrowKey = null;
+    if (arrowRafId) { cancelAnimationFrame(arrowRafId); arrowRafId = null; }
+  }
+});
+
+// ── Swim lanes ────────────────────────────────────────────────────────────────
+function drawSwimLanes() {
+  const container = document.getElementById('swimlanes');
+  container.innerHTML = '';
+  if (!allSources.length) return;
+
+  const gMin = zoomStart !== null ? zoomStart : allEvents.length ? allEvents[0].tsMs : 0;
+  const gMax = zoomEnd   !== null ? zoomEnd   : allEvents.length ? allEvents[allEvents.length - 1].tsMs : 1;
+  const span = gMax - gMin || 1;
+  const W    = Math.max(200, container.clientWidth - 230);
+
+  // ── Ligne d'axe sticky ──
+  const axisRow = document.createElement('div');
+  axisRow.className = 'swim-axis-row';
+  const axisLbl = document.createElement('div');
+  axisLbl.className = 'swim-lbl';
+  axisLbl.style.cssText = 'font-size:9px;color:var(--muted);font-style:italic;';
+  axisLbl.textContent = 'Source / Driver';
+  axisRow.appendChild(axisLbl);
+  const axisWrap = document.createElement('div');
+  axisWrap.className = 'swim-axis-wrap';
+  axisWrap.style.width = W + 'px';
+  const axisCv = document.createElement('canvas');
+  axisCv.className = 'swim-axis';
+  axisCv.width = W; axisCv.height = 28;
+  const axCtx = axisCv.getContext('2d');
+  axCtx.fillStyle = '#121e33';
+  axCtx.fillRect(0, 0, W, 28);
+  axCtx.textAlign = 'center';
+  const TICKS = 8;
+  let lastDateStr = null;
+  for (let i = 0; i <= TICKS; i++) {
+    const x = (i / TICKS) * W;
+    const t = gMin + (i / TICKS) * span;
+    const dStr = fmtDate(t);
+    axCtx.fillStyle = '#2a3040';
+    axCtx.fillRect(x, 0, 1, 28);
+    axCtx.font = '11px Consolas,monospace';
+    axCtx.fillStyle = '#5a7a9a';
+    axCtx.fillText(fmtHMS(t), x, 12);
+    if (dStr !== lastDateStr) {
+      axCtx.font = '10px Consolas,monospace';
+      axCtx.fillStyle = '#8eb8d8';
+      axCtx.fillText(dStr, x, 25);
+      lastDateStr = dStr;
+    }
+  }
+  axisWrap.appendChild(axisCv);
+  axisRow.appendChild(axisWrap);
+  container.appendChild(axisRow);
+
+  // Compter erreurs par source dans la fenêtre courante pour le tri
+  const errCount = {};
+  for (const e of filteredEvts) {
+    if (e.level === 'ERROR')
+      errCount[e.source] = (errCount[e.source] || 0) + 1;
+  }
+
+  // Trier : sources avec erreurs d'abord (par nb décroissant), puis le reste par ordre alpha
+  const sortedSources = [...allSources].sort((a, b) => {
+    const ea = errCount[a] || 0, eb = errCount[b] || 0;
+    if (eb !== ea) return eb - ea;
+    return a.localeCompare(b);
+  });
+
+  sortedSources.forEach(src => {
+    const row = document.createElement('div');
+    row.className = 'swim-row';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'swim-lbl';
+    lbl.textContent = src;
+    lbl.title = src;
+    row.appendChild(lbl);
+
+    const cvWrap = document.createElement('div');
+    cvWrap.className = 'swim-cv-wrap';
+    cvWrap.style.width = W + 'px';
+
+    const cv = document.createElement('canvas');
+    cv.className = 'swim-cv';
+    cv.width = W; cv.height = 26;
+    const ctx = cv.getContext('2d');
+
+    const BUCKETS = Math.max(1, Math.floor(W / 2));
+    const cnt  = new Float32Array(BUCKETS);
+    const ecnt = new Float32Array(BUCKETS);
+
+    for (const e of filteredEvts) {
+      if (e.source !== src) continue;
+      const b = Math.min(BUCKETS - 1, ((e.tsMs - gMin) / span * BUCKETS) | 0);
+      cnt[b]++;
+      if (e.level === 'ERROR') ecnt[b]++;
+    }
+    let maxC = 1;
+    for (let i = 0; i < BUCKETS; i++) if (cnt[i] > maxC) maxC = cnt[i];
+
+    const bw = W / BUCKETS;
+    const active = activeSrcs.has(src);
+    for (let i = 0; i < BUCKETS; i++) {
+      if (!cnt[i]) continue;
+      const x = i * bw;
+      const h = Math.max(2, (cnt[i] / maxC) * 20);
+      ctx.fillStyle = ecnt[i] ? '#ef4444' : active ? '#1e6090' : '#2a3a50';
+      ctx.fillRect(x, 26 - h - 1, Math.max(1, bw - 0.5), h);
+    }
+
+    cvWrap.appendChild(cv);
+    row.appendChild(cvWrap);
+    container.appendChild(row);
+  });
+}
+
+// ── Table (virtual scroll) ────────────────────────────────────────────────────
+const CHUNK = 300;
+let tblOffset = 0;
+
+let syncMs = null; // Map<tsMs, 'a'|'b'>
+
+function buildSyncMs(evts) {
+  // Passe 1 : compter les sources par tsMs
+  const byMs = new Map();
+  for (const e of evts) {
+    if (!byMs.has(e.tsMs)) byMs.set(e.tsMs, new Set());
+    byMs.get(e.tsMs).add(e.source);
+  }
+  // Passe 2 : parcourir les events dans leur ordre d'affichage,
+  // assigner 'a'/'b' en changeant de couleur à chaque nouveau tsMs sync distinct.
+  const result = new Map();
+  let parity = 0;
+  let prevMs = null;
+  for (const e of evts) {
+    if ((byMs.get(e.tsMs) || new Set()).size < 2) continue;
+    if (result.has(e.tsMs)) continue;           // déjà assigné
+    if (prevMs !== null) parity++;              // nouveau tsMs sync → changer
+    result.set(e.tsMs, parity % 2 === 0 ? 'a' : 'b');
+    prevMs = e.tsMs;
+  }
+  return result;
+}
+
+function renderTable() {
+  tblOffset = 0;
+  syncMs = buildSyncMs(filteredEvts);
+  const tbody = document.getElementById('t-body');
+  tbody.innerHTML = '';
+
+  if (!filteredEvts.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="no-data">Aucun événement pour ce filtre / cette fenêtre.</td></tr>';
+    return;
+  }
+  appendRows(tbody);
+
+  const wrap = document.getElementById('table-wrap');
+  wrap.onscroll = function() {
+    if (tblOffset < filteredEvts.length &&
+        this.scrollTop + this.clientHeight > this.scrollHeight - 150) {
+      appendRows(document.getElementById('t-body'));
+    }
+    updateCursor();
+  };
+  // Le curseur est positionné par applyFilters, pas besoin de re-lire le DOM ici
+}
+
+function appendRows(tbody) {
+  const end   = Math.min(tblOffset + CHUNK, filteredEvts.length);
+  const frag  = document.createDocumentFragment();
+  for (let i = tblOffset; i < end; i++) {
+    const e  = filteredEvts[i];
+    const tr = document.createElement('tr');
+    const sp = syncMs && syncMs.get(e.tsMs);   // 'a' | 'b' | undefined
+    if (e.level === 'ERROR') tr.className = 'err-row';
+    if (sp) tr.classList.add('sync-' + sp);
+    const syncColor = sp === 'b' ? '#3b82f6' : '#38bdf8';
+    const syncBadge = sp
+      ? `<span class="sync-badge-${sp}"><svg width="9" height="9" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1 0 6-6" stroke="${syncColor}" stroke-width="2" stroke-linecap="round"/><path d="M2 4v4h4" stroke="${syncColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>SYNC</span>`
+      : '';
+    tr.innerHTML =
+      `<td class="ts">${fmtFull(e.tsMs)}${syncBadge}</td>` +
+      `<td class="src" title="${xe(e.source)}">${xe(e.source)}</td>` +
+      `<td><span class="chip ${e.level} active" style="cursor:default;font-size:9px;padding:1px 6px;">${e.level}</span></td>` +
+      `<td class="msg">${xe(e.msg)}</td>`;
+    frag.appendChild(tr);
+  }
+  tbody.appendChild(frag);
+  tblOffset = end;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmtHMS(ms) {
+  const d = new Date(ms);
+  return d.toISOString().slice(11, 19);
+}
+function fmtFull(ms) {
+  const d = new Date(ms);
+  const dd = String(d.getUTCDate()).padStart(2,'0');
+  const mm = String(d.getUTCMonth()+1).padStart(2,'0');
+  const yyyy = d.getUTCFullYear();
+  const hh = String(d.getUTCHours()).padStart(2,'0');
+  const mi = String(d.getUTCMinutes()).padStart(2,'0');
+  const ss = String(d.getUTCSeconds()).padStart(2,'0');
+  const ms3 = String(d.getUTCMilliseconds()).padStart(3,'0');
+  return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}.${ms3} UTC`;
+}
+function fmtDate(ms) {
+  const d = new Date(ms);
+  const dd = String(d.getUTCDate()).padStart(2,'0');
+  const mm = String(d.getUTCMonth()+1).padStart(2,'0');
+  return `${dd}/${mm}/${d.getUTCFullYear()}`;
+}
+function xe(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Resize ────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => { drawTimeline(); drawSwimLanes(); drawApHistogram(); });
+
+// Initial render
+drawTimeline();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── ANALYSIS PANEL ────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Error taxonomy ────────────────────────────────────────────────────────────
+// Each category: {id, label, color, match(msg)}
+const ERROR_CATS = [
+  {
+    id: 'mixer',
+    label: 'Mixer translate error',
+    desc: 'Erreur de traduction matricielle (IError 100701/100702)',
+    color: '#ef4444',
+    match: m => /IError Code=\[1007(0[12])\]/.test(m)
+  },
+  {
+    id: 'stop',
+    label: 'ECHEC STOP',
+    desc: 'Arrêt clip échoué (Err 100301)',
+    color: '#d29922',
+    match: m => m.includes('ECHEC STOP')
+  },
+  {
+    id: 'cued',
+    label: 'ECHEC CUED / RETRY',
+    desc: 'Chargement clip échoué ou en boucle de retry (Err 100107)',
+    color: '#bc8cff',
+    match: m => m.includes('ECHEC CUED') || m.includes('RETRY CUED')
+  },
+  {
+    id: 'wsock',
+    label: 'Déconnexion réseau (WSOCK)',
+    desc: 'Coupure client TCP/UDP (Err 10053…)',
+    color: '#79c0ff',
+    match: m => m.includes('WSOCK') || m.includes('DISCONNECT')
+  },
+  {
+    id: 'clip',
+    label: 'Clip manquant',
+    desc: 'Clip inexistant — remplacement par clip noir',
+    color: '#e3b341',
+    match: m => m.includes('CLIP NOT EXIST') || m.includes('OmneonEmptyBlackClip')
+  },
+  {
+    id: 'other',
+    label: 'Autres erreurs',
+    desc: '',
+    color: '#79c0ff',
+    match: () => true   // catch-all, applied last
+  }
+];
+
+function categorizeEvent(e) {
+  for (let i = 0; i < ERROR_CATS.length - 1; i++) {
+    if (ERROR_CATS[i].match(e.msg)) return ERROR_CATS[i];
+  }
+  return ERROR_CATS[ERROR_CATS.length - 1];
+}
+
+// ── Active tab tracking ───────────────────────────────────────────────────────
+let currentApTab = 'summary';
+
+function apTab(el) {
+  document.querySelectorAll('.ap-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentApTab = el.dataset.tab;
+  document.getElementById('ap-tab-summary').style.display   = currentApTab === 'summary'   ? 'block' : 'none';
+  document.getElementById('ap-tab-histogram').style.display = currentApTab === 'histogram' ? 'block' : 'none';
+  document.getElementById('ap-tab-list').style.display      = currentApTab === 'list'      ? 'block' : 'none';
+  renderAnalysis();
+}
+
+// ── Main entry point (called from applyFilters) ───────────────────────────────
+function renderAnalysis() {
+  // Scope: errors + warnings in current filteredEvts
+  const scope = filteredEvts.filter(e => e.level === 'ERROR' || e.level === 'WARNING');
+  const scopeLabel = zoomStart !== null
+    ? fmtHMS(zoomStart) + ' → ' + fmtHMS(zoomEnd) + ' UTC'
+    : 'global';
+  document.getElementById('ap-scope').textContent = scopeLabel;
+
+  if (currentApTab === 'summary')   renderApSummary(scope);
+  if (currentApTab === 'histogram') drawApHistogram(scope);
+  if (currentApTab === 'list')      renderApList(scope);
+}
+
+// ── Summary tab ──────────────────────────────────────────────────────────────
+function renderApSummary(scope) {
+  const el = document.getElementById('ap-tab-summary');
+  if (!scope.length) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:16px 0">Aucune erreur/warning dans cette fenêtre.</p>';
+    return;
+  }
+
+  // Count by category
+  const byCat = {};
+  ERROR_CATS.forEach(c => { byCat[c.id] = 0; });
+  const onlyErrors = scope.filter(e => e.level === 'ERROR');
+  onlyErrors.forEach(e => {
+    byCat[categorizeEvent(e).id]++;
+  });
+  const warnings = scope.filter(e => e.level === 'WARNING').length;
+
+  // Count by source
+  const bySrc = {};
+  onlyErrors.forEach(e => {
+    bySrc[e.source] = (bySrc[e.source] || 0) + 1;
+  });
+  const srcEntries = Object.entries(bySrc).sort((a,b) => b[1]-a[1]);
+  const maxSrc = srcEntries.length ? srcEntries[0][1] : 1;
+
+  // RETRY burst detection
+  const retryMsgs = onlyErrors.filter(e => e.msg.includes('RETRY CUED'));
+  let bursts = 0, inBurst = false, lastTs = 0;
+  for (const r of retryMsgs) {
+    if (r.tsMs - lastTs > 60000) { bursts++; inBurst = true; }
+    lastTs = r.tsMs;
+  }
+
+  const topCat = ERROR_CATS.slice(0,-1).sort((a,b) => byCat[b.id]-byCat[a.id])[0];
+  const catTotal = onlyErrors.length || 1;
+
+  let html = '<div class="ap-summary">';
+
+  // ── Colonne gauche : KPI cards ──
+  html += '<div>';
+  html += '<div class="ap-sec-title">Vue globale</div>';
+  html += '<div class="kpi-grid">';
+  html += `<div class="kpi-card k-red" onclick="(${(() => filterToLevel('ERROR')).toString()})()">
+    <div class="kpi-val">${onlyErrors.length.toLocaleString('fr')}</div>
+    <div class="kpi-lbl">Erreurs totales</div>
+  </div>`;
+  html += `<div class="kpi-card k-orange" onclick="(${(() => filterToLevel('WARNING')).toString()})()">
+    <div class="kpi-val">${warnings.toLocaleString('fr')}</div>
+    <div class="kpi-lbl">Warnings</div>
+  </div>`;
+  html += `<div class="kpi-card k-purple" onclick="(${(() => filterToMsg(topCat)).toString()})()">
+    <div class="kpi-val">${byCat[topCat.id].toLocaleString('fr')}</div>
+    <div class="kpi-lbl">${xe(topCat.label)}</div>
+    <div class="kpi-sub">catégorie dominante</div>
+  </div>`;
+  if (retryMsgs.length)
+    html += `<div class="kpi-card k-cyan">
+      <div class="kpi-val">${bursts}</div>
+      <div class="kpi-lbl">Bursts RETRY CUED</div>
+      <div class="kpi-sub">${retryMsgs.length} retries</div>
+    </div>`;
+  html += '</div></div>';
+
+  // ── Colonne milieu : par catégorie ──
+  html += '<div>';
+  html += '<div class="ap-sec-title">Par catégorie</div>';
+  ERROR_CATS.forEach(cat => {
+    const n = byCat[cat.id];
+    if (!n) return;
+    const pct = Math.round(n / catTotal * 100);
+    html += `<div class="sum-row" onclick="filterToMsg(ERROR_CATS.find(c=>c.id==='${cat.id}'))">
+      <span class="sum-label" style="color:${cat.color}" title="${xe(cat.desc)}">${xe(cat.label)}</span>
+      <span class="sum-track"><span class="sum-fill" style="width:${Math.max(1,pct)}%;background:${cat.color}"></span></span>
+      <span class="sum-cnt">${n.toLocaleString('fr')}</span>
+      <span class="sum-pct">${pct}%</span>
+    </div>`;
+  });
+  html += '</div>';
+
+  // ── Colonne droite : top sources ──
+  html += '<div>';
+  if (srcEntries.length) {
+    html += '<div class="ap-sec-title">Top sources</div>';
+    srcEntries.slice(0, 10).forEach(([src, n]) => {
+      const pct = Math.round(n / maxSrc * 100);
+      html += `<div class="sum-row">
+        <span class="sum-label" style="color:#58a6ff" title="${xe(src)}">${xe(src)}</span>
+        <span class="sum-track"><span class="sum-fill" style="width:${Math.max(1,pct)}%;background:#ef4444"></span></span>
+        <span class="sum-cnt">${n.toLocaleString('fr')}</span>
+        <span class="sum-pct">${pct}%</span>
+      </div>`;
+    });
+  }
+  html += '</div>';
+
+  html += '</div>'; // /ap-summary
+  el.innerHTML = html;
+}
+
+function statCard(val, lbl, sub, cls, onclick) {
+  const click = onclick ? `onclick="(${onclick.toString()})()"` : '';
+  return `<div class="stat-card ${cls}" ${click} title="${sub||lbl}">
+    <div class="sc-val">${typeof val==='number' ? val.toLocaleString('fr') : val}</div>
+    <div class="sc-lbl">${lbl}</div>
+    ${sub ? `<div class="sc-sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+// ── Histogram tab ─────────────────────────────────────────────────────────────
+function drawApHistogram(scope) {
+  if (currentApTab !== 'histogram') return;
+  if (!scope) scope = filteredEvts.filter(e => e.level === 'ERROR' || e.level === 'WARNING');
+
+  const canvas  = document.getElementById('ap-hist-canvas');
+  const legend  = document.getElementById('ap-hist-legend');
+  const panel   = document.getElementById('ap-body');
+  const W = panel.clientWidth - 28;
+  const H = 140;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#080e1a';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!scope.length) {
+    ctx.fillStyle = '#5a7a9a';
+    ctx.font = '12px Consolas';
+    ctx.textAlign = 'center';
+    ctx.fillText('Aucune erreur dans cette fenêtre', W/2, H/2);
+    legend.innerHTML = '';
+    return;
+  }
+
+  const gMin = scope[0].tsMs;
+  const gMax = scope[scope.length-1].tsMs;
+  const span = gMax - gMin || 1;
+  const BUCKETS = Math.max(1, Math.floor(W / 4));
+
+  // Per-category buckets (exclude catch-all)
+  const cats = ERROR_CATS.slice(0, -1);
+  const catBuckets = cats.map(() => new Float32Array(BUCKETS));
+  scope.forEach(e => {
+    if (e.level !== 'ERROR') return;
+    const b = Math.min(BUCKETS-1, ((e.tsMs - gMin) / span * BUCKETS) | 0);
+    for (let ci = 0; ci < cats.length; ci++) {
+      if (cats[ci].match(e.msg)) { catBuckets[ci][b]++; break; }
+    }
+  });
+
+  // Max bucket total (sum across categories) for correct stacked normalization
+  let maxC = 1;
+  for (let b = 0; b < BUCKETS; b++) {
+    let total = 0;
+    for (let ci = 0; ci < cats.length; ci++) total += catBuckets[ci][b];
+    if (total > maxC) maxC = total;
+  }
+
+  const bw = W / BUCKETS;
+  for (let b = 0; b < BUCKETS; b++) {
+    let yBase = H - 4;
+    for (let ci = 0; ci < cats.length; ci++) {
+      const n = catBuckets[ci][b];
+      if (!n) continue;
+      const h = Math.max(2, (n / maxC) * (H - 16));
+      ctx.fillStyle = cats[ci].color;
+      ctx.fillRect(b * bw, yBase - h, Math.max(1.5, bw - 0.5), h);
+      yBase -= h;
+    }
+  }
+
+  // Time ticks
+  ctx.font = '9px Consolas';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#5a7a9a';
+  const TICKS = 6;
+  for (let i = 0; i <= TICKS; i++) {
+    const x = (i / TICKS) * W;
+    const t = gMin + (i / TICKS) * span;
+    ctx.fillStyle = '#1e3050';
+    ctx.fillRect(x, 0, 1, H);
+    ctx.fillStyle = '#5a7a9a';
+    ctx.fillText(fmtHMS(t), x, 10);
+  }
+
+  // Legend
+  legend.innerHTML = cats.map(c => `
+    <span class="leg-item">
+      <span class="leg-dot" style="background:${c.color}"></span>${c.label}
+    </span>`).join('');
+}
+
+// ── Detail list tab ───────────────────────────────────────────────────────────
+const AP_LIST_CHUNK = 150;
+let apListOffset = 0;
+let apListData   = [];
+
+function renderApList(scope) {
+  apListOffset = 0;
+  apListData   = scope || filteredEvts.filter(e => e.level === 'ERROR' || e.level === 'WARNING');
+
+  const el = document.getElementById('ap-tab-list');
+  el.innerHTML = '';
+  if (!apListData.length) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:16px 0">Aucune erreur/warning dans cette fenêtre.</p>';
+    return;
+  }
+
+  const tbl = document.createElement('table');
+  tbl.className = 'err-mt';
+  tbl.innerHTML = '<thead><tr><th>Horodatage UTC</th><th>Catégorie</th><th>Source</th><th>Message</th></tr></thead>';
+  const tbody = document.createElement('tbody');
+  tbl.appendChild(tbody);
+  el.appendChild(tbl);
+
+  appendApRows(tbody);
+
+  const apBody = document.getElementById('ap-body');
+  apBody.onscroll = function() {
+    if (apListOffset < apListData.length &&
+        this.scrollTop + this.clientHeight > this.scrollHeight - 100) {
+      appendApRows(tbody);
+    }
+  };
+}
+
+function appendApRows(tbody) {
+  const end  = Math.min(apListOffset + AP_LIST_CHUNK, apListData.length);
+  const frag = document.createDocumentFragment();
+  for (let i = apListOffset; i < end; i++) {
+    const e   = apListData[i];
+    const cat = e.level === 'ERROR' ? categorizeEvent(e) : null;
+    const tr  = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="ets">${fmtFull(e.tsMs)}</td>` +
+      `<td>${cat
+        ? `<span class="cat-pill" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44">${xe(cat.label)}</span>`
+        : `<span class="tag tag-WARNING">WARNING</span>`
+      }</td>` +
+      `<td class="esrc" title="${xe(e.source)}">${xe(e.source)}</td>` +
+      `<td class="emsg">${xe(e.msg)}</td>`;
+    frag.appendChild(tr);
+  }
+  tbody.appendChild(frag);
+  apListOffset = end;
+}
+
+// ── Quick-filter helpers (clicked from stat cards) ────────────────────────────
+function filterToLevel(lvl) {
+  // Activate only that level, deactivate others
+  document.querySelectorAll('.chip[data-level]').forEach(c => {
+    const on = c.dataset.level === lvl;
+    c.classList.toggle('active', on);
+    activeLevels[on ? 'add' : 'delete'](c.dataset.level);
+  });
+  applyFilters();
+}
+
+function filterToMsg(cat) {
+  if (!cat) return;
+  // Switch search to a representative keyword
+  const kw = cat.id === 'mixer'  ? 'IError Code' :
+             cat.id === 'stop'   ? 'ECHEC STOP' :
+             cat.id === 'cued'   ? 'ECHEC CUED' :
+             cat.id === 'wsock'  ? 'WSOCK' :
+             cat.id === 'clip'   ? 'CLIP NOT EXIST' : '';
+  if (kw) {
+    document.getElementById('search-txt').value = kw;
+  }
+  applyFilters();
+}
+
+// ── Curseur temporel ─────────────────────────────────────────────────────────
+// Drapeaux : quand l'utilisateur fait glisser le curseur, on bloque updateCursor
+// pour que la table ne reprenne pas le dessus pendant le drag.
+let cursorDragging = false;
+
+// Recherche binaire : index du premier event >= tsMs dans filteredEvts
+function bisectLeft(tsMs) {
+  let lo = 0, hi = filteredEvts.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (filteredEvts[mid].tsMs < tsMs) lo = mid + 1; else hi = mid;
+  }
+  return lo;
+}
+
+// Fait défiler la table pour que le message à l'index idx soit en tête
+function seekTableToIdx(idx) {
+  if (idx < 0 || !filteredEvts.length) return;
+  idx = Math.min(idx, filteredEvts.length - 1);
+
+  const wrap  = document.getElementById('table-wrap');
+  const tbody = document.getElementById('t-body');
+
+  // S'assurer que la ligne est rendue (scroll virtuel : on rend par chunks)
+  while (tblOffset <= idx && tblOffset < filteredEvts.length) {
+    appendRows(tbody);
+  }
+
+  // Retrouver la ligne dans le DOM (les lignes rendues commencent à l'index 0)
+  const rows = tbody.querySelectorAll('tr');
+  if (rows[idx]) {
+    // Aligner la ligne en haut du scroll
+    const rowTop    = rows[idx].offsetTop;
+    wrap.scrollTop  = rowTop;
+  }
+}
+
+// Géométrie du canvas des swimlanes — référence unique pour curseur + click + drag
+// Retourne { left: px depuis #swim-area, width: px, areaLeft: px viewport }
+function swimCvGeom() {
+  const swimArea  = document.getElementById('swim-area');
+  const swimLanes = document.getElementById('swimlanes');
+  const areaRect  = swimArea.getBoundingClientRect();
+  const laneRect  = swimLanes.getBoundingClientRect();
+  const left      = laneRect.left - areaRect.left + 230;  // offset depuis #swim-area
+  const width     = swimLanes.clientWidth - 230;
+  return { left, width, areaLeft: areaRect.left };
+}
+
+// Positionne les deux curseurs pour un tsMs donné, sans toucher à la table
+function placeCursors(tsMs) {
+  const tlCursor   = document.getElementById('tl-cursor');
+  const swimCursor = document.getElementById('swim-cursor');
+
+  if (!allEvents.length) return;
+
+  const timeLabel = fmtHMS(tsMs);
+
+  // ── Timeline globale : mesurer la position réelle du canvas dans le DOM ──
+  const tlCanvas   = document.getElementById('tl-canvas');
+  const canvasWrap = document.getElementById('canvas-wrap');
+  const tlCanvasRect  = tlCanvas.getBoundingClientRect();
+  const wrapRect      = canvasWrap.getBoundingClientRect();
+  const tlCanvasLeft  = tlCanvasRect.left - wrapRect.left;  // offset CSS du canvas dans le wrap
+  const tlW           = tlCanvasRect.width || 1;
+  const gMin = allEvents[0].tsMs;
+  const gMax = allEvents[allEvents.length - 1].tsMs;
+  const xTl  = tlCanvasLeft + ((tsMs - gMin) / (gMax - gMin || 1)) * tlW;
+  tlCursor.style.left    = Math.round(xTl) + 'px';
+  tlCursor.style.display = 'block';
+  tlCursor.setAttribute('data-time', timeLabel);
+
+  // ── Swimlanes ──
+  const swimLanes = document.getElementById('swimlanes');
+  const swimHead  = document.getElementById('swim-header');
+  const tlCont    = document.getElementById('tl-container');
+  const zMin    = zoomStart !== null ? zoomStart : gMin;
+  const zMax    = zoomEnd   !== null ? zoomEnd   : gMax;
+  const geom    = swimCvGeom();
+  const xSwim   = geom.left + ((tsMs - zMin) / (zMax - zMin || 1)) * geom.width;
+
+  const topOff = tlCont.offsetHeight + swimHead.offsetHeight;
+  swimCursor.style.left    = Math.round(xSwim) + 'px';
+  swimCursor.style.top     = topOff + 'px';
+  swimCursor.style.height  = swimLanes.offsetHeight + 'px';
+  swimCursor.style.display = 'block';
+  swimCursor.setAttribute('data-time', timeLabel);
+}
+
+// Met à jour les curseurs depuis la table (appelé au scroll de la table)
+function updateCursor() {
+  if (cursorDragging) return;
+
+  const tlCursor   = document.getElementById('tl-cursor');
+  const swimCursor = document.getElementById('swim-cursor');
+
+  if (!filteredEvts.length || !allEvents.length) {
+    tlCursor.style.display = 'none'; swimCursor.style.display = 'none'; return;
+  }
+
+  const wrap = document.getElementById('table-wrap');
+  const rows = wrap.querySelectorAll('tbody tr');
+  if (!rows.length) { tlCursor.style.display = 'none'; swimCursor.style.display = 'none'; return; }
+
+  // Hauteur moyenne d'une ligne rendue → index de la première ligne visible
+  const rowH   = tblOffset > 0 ? wrap.scrollHeight / tblOffset : 24;
+  const visIdx = Math.min(Math.floor(wrap.scrollTop / rowH), tblOffset - 1);
+
+  const evt = filteredEvts[visIdx];
+  if (!evt) { tlCursor.style.display = 'none'; swimCursor.style.display = 'none'; return; }
+
+  placeCursors(evt.tsMs);
+}
+
+// ── Drag curseur sur la timeline globale ──────────────────────────────────────
+(function() {
+  const tlCursor = document.getElementById('tl-cursor');
+  const canvasWrap = document.getElementById('canvas-wrap');
+  let dragging = false;
+
+  function xToMs(clientX) {
+    const rect = canvasWrap.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const gMin = allEvents[0].tsMs, gMax = allEvents[allEvents.length - 1].tsMs;
+    return gMin + ratio * (gMax - gMin);
+  }
+
+  tlCursor.addEventListener('mousedown', e => {
+    if (!filteredEvts.length) return;
+    cursorDragging = true;
+    dragging = true;
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+    e.stopPropagation();
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const tsMs = xToMs(e.clientX);
+    placeCursors(tsMs);
+    const idx = bisectLeft(tsMs);
+    seekTableToIdx(idx);
+  });
+
+  document.addEventListener('mouseup', e => {
+    if (!dragging) return;
+    dragging = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    const tsMs = xToMs(e.clientX);
+    placeCursors(tsMs);
+    seekTableToIdx(bisectLeft(tsMs));
+    requestAnimationFrame(() => { cursorDragging = false; });
+  });
+})();
+
+// ── Drag curseur sur les swimlanes ────────────────────────────────────────────
+(function() {
+  const swimCursor = document.getElementById('swim-cursor');
+  const swimLanes  = document.getElementById('swimlanes');
+  let dragging = false;
+
+  function xToMs(clientX) {
+    const gMin  = allEvents[0].tsMs, gMax = allEvents[allEvents.length - 1].tsMs;
+    const zMin  = zoomStart !== null ? zoomStart : gMin;
+    const zMax  = zoomEnd   !== null ? zoomEnd   : gMax;
+    const geom  = swimCvGeom();
+    const ratio = Math.max(0, Math.min(1, (clientX - geom.areaLeft - geom.left) / geom.width));
+    return zMin + ratio * (zMax - zMin);
+  }
+
+  swimCursor.addEventListener('mousedown', e => {
+    if (!filteredEvts.length) return;
+    cursorDragging = true;
+    dragging = true;
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+    e.stopPropagation();
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const tsMs = xToMs(e.clientX);
+    placeCursors(tsMs);
+    const idx = bisectLeft(tsMs);
+    seekTableToIdx(idx);
+  });
+
+  document.addEventListener('mouseup', e => {
+    if (!dragging) return;
+    dragging = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    const tsMs = xToMs(e.clientX);
+    placeCursors(tsMs);
+    seekTableToIdx(bisectLeft(tsMs));
+    requestAnimationFrame(() => { cursorDragging = false; });
+  });
+})();
+
+// ── Clic sur les swimlanes → déplacer le curseur ─────────────────────────────
+document.getElementById('swimlanes').addEventListener('click', function(e) {
+  if (!filteredEvts.length || !allEvents.length) return;
+  if (e.target.closest && e.target.closest('#swim-cursor')) return;
+
+  const gMin  = allEvents[0].tsMs, gMax = allEvents[allEvents.length - 1].tsMs;
+  const zMin  = zoomStart !== null ? zoomStart : gMin;
+  const zMax  = zoomEnd   !== null ? zoomEnd   : gMax;
+  const geom  = swimCvGeom();
+  const ratio = Math.max(0, Math.min(1, (e.clientX - geom.areaLeft - geom.left) / geom.width));
+  const tsMs  = zMin + ratio * (zMax - zMin);
+
+  placeCursors(tsMs);
+  seekTableToIdx(bisectLeft(tsMs));
+  requestAnimationFrame(() => placeCursors(tsMs));
+});
+
+// Écouter le scroll de la table + resize pour mettre à jour les curseurs
+document.getElementById('table-wrap').addEventListener('scroll', updateCursor, { passive: true });
+window.addEventListener('resize', updateCursor);
+
+// ── Resize swimlanes / table ──────────────────────────────────────────────────
+(function() {
+  const handle = document.getElementById('swim-resize');
+  const swim   = document.getElementById('swimlanes');
+  let dragging = false, startY = 0, startH = 0;
+
+  handle.addEventListener('mousedown', e => {
+    dragging = true;
+    startY = e.clientY;
+    startH = swim.offsetHeight;
+    handle.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'row-resize';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const delta = e.clientY - startY;   // drag down = bigger swimlanes
+    const newH  = Math.min(Math.max(28, startH + delta), window.innerHeight * 0.5);
+    swim.style.height = newH + 'px';
+    drawSwimLanes();
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+  });
+})();
+
+// ── Resize handle ─────────────────────────────────────────────────────────────
+(function() {
+  const handle = document.getElementById('resize-handle');
+  const panel  = document.getElementById('analysis-panel');
+  let dragging = false, startY = 0, startH = 0;
+
+  handle.addEventListener('mousedown', e => {
+    dragging = true;
+    startY = e.clientY;
+    startH = panel.offsetHeight;
+    handle.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'row-resize';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const delta = startY - e.clientY;   // drag up = bigger panel
+    const newH  = Math.min(Math.max(80, startH + delta), window.innerHeight * 0.7);
+    panel.style.flex = `0 0 ${newH}px`;
+    drawApHistogram();
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+  });
+})();
+
+</script>
+</body>
+</html>
